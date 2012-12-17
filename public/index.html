@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+    <head>
+		<script src="klass.js"></script>
+    </head>
+    <body>
+		<canvas id="canvas1" width="500", height="400">
+		Random Canvas
+		</canvas>
+		<button onclick="mpd()">Midpoint Displace</button>
+
+		<script type="text/javascript">
+		element = document.getElementById("canvas1");
+		c = element.getContext("2d");
+
+		// read the width and height of the canvas
+		width = element.width;
+		height = element.height;
+		
+		function setPixel(imageData, x, y, r, g, b, a) {
+		    index = (x + y * imageData.width) * 4;
+		    imageData.data[index+0] = r;
+		    imageData.data[index+1] = g;
+		    imageData.data[index+2] = b;
+		    imageData.data[index+3] = a;
+		}
+		
+		function drawTerrain(imageData, lineoutput, height) {
+			
+			for (var x = 0; x < lineoutput.length; x++){
+				for (var y = 0; y < height; y++) {
+					if (y > lineoutput[x]) {
+						setPixel(imageData, x, y, 0, 255, 0, 255);
+					} else {
+						setPixel(imageData, x, y, 0, 0, 255, 255);	
+					}
+				}
+			}
+		}
+
+
+		// create a new pixel array
+		imageData = c.createImageData(width, height);
+
+
+		var Linerator = klass(function(config) {
+			this.w = 2;
+			while (this.w < config.width) {
+				this.w *= 2;
+			} 
+			
+			this.pixelWidth = config.width;
+			
+			// this.w = config.width;
+			this.h = config.height;
+			
+			var mid = Math.round(this.h/2);
+			this.segments = [[mid, mid]];
+			
+			this.maxOffset = mid;
+			this.minOffset = -1*mid;
+			
+		}).methods({
+			toArray: function() {
+				var output = [];
+				
+				var segWidth = this.w / this.segments.length;
+				console.log("segWidth: %d", segWidth);
+				for (var segi = 0; segi < this.segments.length; segi++) {
+					
+					var seg = this.segments[segi];
+					var pixAmount = (seg[1] - seg[0])/segWidth;
+					
+					for (var pixeli = 0; pixeli < segWidth; pixeli++) {
+						var pix = segi * segWidth + pixeli;
+						if (pix >= this.pixelWidth) {
+							break;
+						}
+						output.push(seg[0] + (pixAmount*pixeli+1));
+					}
+					 
+					
+				}
+				
+				return output;
+			},
+			
+			divide: function() {
+				var newSegments = [];
+				
+				var segWidth = this.w / this.segments.length;
+				if (segWidth < 1) {
+					return;
+				}
+				
+				
+				for (var i = 0; i < this.segments.length; i++) {
+					
+					
+					var offset = Linerator.getRandom(this.minOffset, this.maxOffset);
+					
+					
+					var seg = this.segments[i];
+					
+					var midY = (seg[0]+seg[1])/2;
+					
+					newSegments.push([seg[0], midY+offset]);
+					newSegments.push([midY+offset, seg[1]]);
+					
+				}
+				
+				this.minOffset /= 2;
+				this.maxOffset /= 2;
+				
+				this.segments = newSegments;
+								console.log("line now has %d segments", this.segments.length);
+			}
+		}).statics({
+			getRandom: function(min, max) {
+			    return min + Math.floor(Math.random() * (max - min + 1));
+			}
+		});
+		
+		
+		var line = new Linerator({
+			width: width,
+			height: height
+		});
+		
+		console.dir(line.toArray());
+					drawTerrain(imageData, line.toArray(), height);
+					c.putImageData(imageData, 0, 0); // at coords 0,0
+		
+		function mpd() {
+			console.log("mpding!!");
+			
+			line.divide();
+			console.dir(line.toArray());
+			drawTerrain(imageData, line.toArray(), height);
+			c.putImageData(imageData, 0, 0); // at coords 0,0
+			
+		}
+		</script>
+    </body>
+</html>
