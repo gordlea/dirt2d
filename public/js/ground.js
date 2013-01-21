@@ -47,6 +47,21 @@ var Ground = klass(function(config) {
             return output;
         },
 
+        toSegmentArray: function() {
+            var output = [];
+
+            var segWidth = this.w / this.segments.length;
+            for (var segi = 0; segi < this.segments.length; segi++) {
+                var seg = this.segments[segi];
+                var pixAmount = (seg[1] - seg[0])/segWidth;
+
+                output.push([[segi*segWidth, seg[0]], [segi*segWidth + segWidth, seg[1]]]);
+            }
+
+            return output;
+        },
+
+
         divide: function() {
             var newSegments = [];
 
@@ -87,8 +102,9 @@ var Ground = klass(function(config) {
 
             for (var i = -1 * radius; i <= radius; i++) {
                 var x = i;
-                var y = Math.sqrt(-1 * (Math.pow(x,2) - Math.pow(radius,2)));
-                line[a - x] += y;
+                var y = Math.sqrt(-1 *(Math.pow(x,2) - Math.pow(radius,2))) / (2*Math.PI);
+//                y = b + radius * Math.sin()
+                line[a - x] -= y;
             }
             return line;
         }

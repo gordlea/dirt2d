@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 
     <head>
+    <script src="js/cp.min.js"></script>
 		<script src="js/klass.js"></script>
     <script src="js/ground.js"></script>
-    <script src="js/dirt2d.js"></script>
+    <script src="js/uuid.js"></script>
+    <script src="js/dirt2d2.js"></script>
 
 </head>
     <body onload="start()">
 
-		<canvas id="canvas1" width="500" height="400">
+		<canvas id="canvas1" width="640" height="480">
 
 		Random Canvas
 		</canvas>
@@ -16,9 +18,11 @@
 
                 <!--<button onclick="mpd()">Midpoint Displace</button>-->
 
-                <button onclick="boom()">Fire in the hole</button>
+                <!--<button onclick="boom()">Fire in the hole</button>-->
+                <button onclick="d2d.fireProjectile()">ready aim</button>
 
         </span>
 
     </body>
+
 </html>

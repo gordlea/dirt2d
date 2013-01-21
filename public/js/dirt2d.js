@@ -1,7 +1,23 @@
 var ground = null;
 var width = null;
 var height = null;
+
+var space = new cp.Space();
+space.gravity = v(0, -500);
+
+var requestAnimationFrame = window.requestAnimationFrame
+    || window.webkitRequestAnimationFrame
+    || window.mozRequestAnimationFrame
+    || window.oRequestAnimationFrame
+    || window.msRequestAnimationFrame
+    || function(callback) {
+    return window.setTimeout(callback, 1000 / 60);
+};
+
 function start() {
+
+
+
     element = document.getElementById("canvas1");
     c = element.getContext("2d");
 
@@ -14,10 +30,7 @@ function start() {
 // create a new pixel array
     imageData = c.createImageData(width, height);
 
-    ground = new Ground({
-        width: width,
-        height: height
-    });
+
 
 //    console.dir(line.toArray());
 
@@ -65,4 +78,30 @@ function boom() {
 
     drawTerrain(imageData, ground.explosion(boom_x, boom_y, 10), height);
     c.putImageData(imageData, 0, 0); // at coords 0,0
+}
+
+function fireProjectile() {
+    var mass = 4 * 4 * 1/1000;
+
+    var rock = space.addBody(new cp.Body(mass, cp.momentForBox(mass, 4, 4)));
+    rock.setPos(v(width/2, height/2));
+    rock.setAngle(1);
+    shape = space.addShape(new cp.BoxShape(rock, 4, 4));
+
+    var ctx = c;
+
+    var self = this;
+
+    // Draw shapes
+    ctx.strokeStyle = 'black';
+    ctx.clearRect(0, 0, this.width, this.height);
+
+    this.ctx.font = "16px sans-serif";
+    this.ctx.lineCap = 'round';
+
+    this.space.eachShape(function(shape) {
+        ctx.fillStyle = shape.style();
+        shape.draw(ctx, self.scale, self.point2canvas);
+    });
+
 }
