@@ -1,10 +1,10 @@
 var Ground = klass(function(config) {
-    this.w = 2;
-    while (this.w < config.width) {
-        this.w *= 2;
-    }
+//    this.w = 2;
+//    while (this.w < config.width) {
+//        this.w *= 2;
+//    }
 
-    this.pixelWidth = config.width;
+    this.w = this.pixelWidth = config.width;
 
     // this.w = config.width;
     this.h = config.height;
@@ -61,6 +61,36 @@ var Ground = klass(function(config) {
             return output;
         },
 
+        getVerts: function() {
+
+
+//            var verts = [0,this.h/2, this.w, this.h/2, this.w, 0, 0, 0]
+            var verts = [];
+
+            var segWidth = this.w / this.segments.length;
+            for (var segi = 0; segi < this.segments.length; segi++) {
+                var seg = this.segments[segi];
+                var pixAmount = (seg[1] - seg[0])/segWidth;
+
+                verts.push([
+                    segi*segWidth, seg[0],
+
+                    (segi+1)*segWidth, seg[1],
+
+                    (segi+1)*segWidth, 0,
+
+                    segi*segWidth, 0
+                ]);
+
+            }
+//            verts.push(this.w);
+//            verts.push(0);
+//            verts.push(0);
+//            verts.push(0);
+
+            return verts;
+
+        },
 
         divide: function() {
             var newSegments = [];

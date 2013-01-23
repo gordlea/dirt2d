@@ -43,7 +43,7 @@ var Dirt2d = klass(function() {
     this.deadBodies = {};
 
     var width = this.width = canvas.width = window.innerWidth;
-    var height = this.height = canvas.height = window.innerHeight;
+    var height = this.height = canvas.height = window.innerHeight - 64;
     if (width/height > 640/480) {
         this.scale = height / 480;
     } else {
