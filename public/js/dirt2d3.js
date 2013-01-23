@@ -24,7 +24,7 @@ var Dirt2d = klass(function() {
     space.collisionSlop = 0.5;
     space.sleepTimeThreshold = 0.5;
 
-    space.addCollisionHandler(1,2, null, this.handleProjectileImpact.bind(this));
+//    space.addCollisionHandler(1,2, null, this.handleProjectileImpact.bind(this));
 
     this.remainder = 0;
     this.fps = 0;
@@ -54,24 +54,7 @@ var Dirt2d = klass(function() {
 
 }).methods({
 
-        handleProjectileImpact: function(collision,space) {
-            console.log("howdy!");
 
-            var ix = collision.a.tc.x;
-
-            var iy = collision.a.tc.y;
-
-
-
-//            this.space.removeBody(collision.body_a);
-            this.deadBodies[collision.body_a.id] = collision.body_a;
-            console.log("projectile impacted at %d,%d",ix,iy);
-
-
-            this.ground.explosion(ix,iy,30);
-
-            this.terrainDirty = true;
-        },
 
         generateTerrain: function() {
             this.ground = new Ground({
@@ -83,9 +66,13 @@ var Dirt2d = klass(function() {
 
 //            var segs = this.ground.segments;
 
-//            var floor = space.addShape(new cp.SegmentShape(space.staticBody, v(0, 0), v(640, 0), 0));
-//            floor.setElasticity(1);
-//            floor.setFriction(1);
+            var floor = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0, 0), v(640, 0), 0));
+            floor.setElasticity(1);
+            floor.setFriction(1);
+
+            var wall_l = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0,0), v(0,640), 0));
+            var wall_r = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(640,0), v(640,640), 0));
+            var ceiling = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0,640), v(640,640), 0));
 //            floor.setLayers(NOT_GRABABLE_MASK);
              this.drawTerrain();
         },
@@ -143,21 +130,49 @@ var Dirt2d = klass(function() {
 
         },
 
+
+
         fireBall: function() {
             var space = this.space;
-            var width = 5;
-            var height = 5;
-            var mass = width * height * (1/1000);
-            var projectileBody = new cp.Body(mass, cp.momentForBox(mass, width, height));
+            var radius = Dirt2d.getRandom(2,8)
+            var mass = radius * radius * (1/500) * Dirt2d.getRandom(1,10);
+            var moment = cp.momentForCircle(mass, 0, radius, v(0,0))
+            var projectileBody = new cp.Body(mass, moment);
             projectileBody.id = UUIDjs.create().hex;
             var rock = space.addBody(projectileBody);
-            rock.setPos(v(100, 300));
+            rock.setPos(v(Dirt2d.getRandom(100,540), Dirt2d.getRandom(100,380)));
             rock.setAngle(1);
-            shape = space.addShape(new cp.CircleShape(rock, 4, v(0,0)));
-            shape.setFriction(0.3);
-            shape.setElasticity(0.3);
+            shape = space.addShape(new cp.CircleShape(rock, radius, v(0,0)));
+            shape.setFriction(0.9);
+            shape.setElasticity(0.1);
             shape.setCollisionType(5);
-            rock.applyImpulse(v(3, 3));
+            rock.applyImpulse(v(Dirt2d.getRandom(-6,6), Dirt2d.getRandom(-6,6)), v(Dirt2d.getRandom(-6,6), Dirt2d.getRandom(-6,6)));
+        },
+
+        fireTriangle: function() {
+            var space = this.space;
+            var radius = Dirt2d.getRandom(6,16)
+            var mass = radius * radius * (1/500) * Dirt2d.getRandom(1,10);
+            var verts = [
+                Dirt2d.getRandom(6, 16),
+                Dirt2d.getRandom(6, 16),
+                Dirt2d.getRandom(6, 16),
+                Dirt2d.getRandom(-6, -16),
+                Dirt2d.getRandom(-3, -8),
+                Dirt2d.getRandom(-1,1)
+
+            ];
+            var moment = cp.momentForPoly(mass, verts, v(0,0))
+            var projectileBody = new cp.Body(mass, moment);
+            projectileBody.id = UUIDjs.create().hex;
+            var rock = space.addBody(projectileBody);
+            rock.setPos(v(Dirt2d.getRandom(100,540), Dirt2d.getRandom(100,380)));
+            rock.setAngle(1);
+            shape = space.addShape(new cp.PolyShape(rock, verts, v(0,0)));
+            shape.setFriction(0.01);
+            shape.setElasticity(0.4);
+            shape.setCollisionType(5);
+            rock.applyImpulse(v(Dirt2d.getRandom(-6,6), Dirt2d.getRandom(-6,6)), v(Dirt2d.getRandom(-6,6), Dirt2d.getRandom(-6,6)));
         },
 
     update: function(dt) {
@@ -202,6 +217,14 @@ var Dirt2d = klass(function() {
     },
 
         step: function() {
+            if (document.getElementById('spew').checked) {
+                this.fireBall();
+            }
+            if (document.getElementById('spewtri').checked) {
+                this.fireTriangle();
+            }
+
+
             var now = Date.now();
             var dt = (now - this.lastStep) / 1000;
             this.lastStep = now;
@@ -250,7 +273,11 @@ var Dirt2d = klass(function() {
 //                Demo.resized = false;
             }
         }
-});
+}).statics({
+        getRandom: function(min, max) {
+            return min + Math.floor(Math.random() * (max - min + 1));
+        }
+    });
 
 // **** Draw methods for Shapes
 

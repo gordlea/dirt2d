@@ -102,9 +102,17 @@ var Ground = klass(function(config) {
 
             for (var i = -1 * radius; i <= radius; i++) {
                 var x = i;
-                var y = Math.sqrt(-1 *(Math.pow(x,2) - Math.pow(radius,2))) / (2*Math.PI);
+                var y = Math.sqrt(-1 *(Math.pow(x,2) - Math.pow(radius,2)));// / (2*Math.PI);
 //                y = b + radius * Math.sin()
-                line[a - x] -= y;
+
+                var old_y = line[a-x];
+
+                if (old_y > b + y) {
+                    line[a-x] -= 2*y;
+                } else
+                if (old_y > b - y) {
+                    line[a-x] = b - y ;
+                }
             }
             return line;
         }
