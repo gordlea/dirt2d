@@ -1,10 +1,4 @@
-var ground = null;
-var width = null;
-var height = null;
-
-var space = new cp.Space();
-space.gravity = v(0, -500);
-
+'use strict';
 var requestAnimationFrame = window.requestAnimationFrame
     || window.webkitRequestAnimationFrame
     || window.mozRequestAnimationFrame
@@ -14,94 +8,212 @@ var requestAnimationFrame = window.requestAnimationFrame
     return window.setTimeout(callback, 1000 / 60);
 };
 
-function start() {
+$(function() {
+    var d2d = new Dirt2d();
+});
+
+var Dirt2d = dejavu.Class.declare({
+    $name: 'Dirt2d',
+    __ground: null,
+    __space: null,
+    __groundOffset: 100,
+    __ctx: null,
 
 
+    initialize: function() {
+        this.handleWindowResize();
+        $(window).resize(this.handleWindowResize);
 
-    element = document.getElementById("canvas1");
-    c = element.getContext("2d");
+        this.__ground = new Ground(5, this.__groundOffset);
 
-// read the width and height of the canvas
-    width = element.width;
-    height = element.height;
+        this.__space = new cp.Space();
+        this.__space.iterations = 60;
+        this.__space.gravity = cp.v(0, -200);
+        this.__space.sleepTimeThreshold = 0.5;
+        this.__space.collisionSlop = 0.5;
+        this.__space.sleepTimeThreshold = 0.5;
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        this.__ctx = ctx;
 
+        this.drawTerrain();
+        this.draw();
+    },
 
+    drawTerrain: function() {
+        var segWidthPixels = $('#canvas').innerWidth() / this.__ground.segments.length;
+        var pixelOffsetScaler = $('#canvas').innerHeight()/this.__groundOffset/2;
+        console.log("segWidthPixels: %d", segWidthPixels);
 
-// create a new pixel array
-    imageData = c.createImageData(width, height);
+        for (var x = 0; x < this.__ground.segments.length; x++) {
 
+            var segment = this.__ground.segments[x];
+            var verts = [
+                x*segWidthPixels, segment[0]/pixelOffsetScaler,
+                (x+1)*segWidthPixels, segment[1]/pixelOffsetScaler,
+                (x+1)*segWidthPixels, 0,
+                x*segWidthPixels, 0
+            ];
 
+            this.__space.addShape(new cp.PolyShape(this.__space.staticBody, verts, cp.v(0,0)));
+        }
+    },
 
-//    console.dir(line.toArray());
+    draw: function() {
+        var ctx = this.__ctx;
+        ctx.strokeStyle = 'black';
+        ctx.clearRect(0, 0, $('#canvas').width(), $('#canvas').height());
 
-    drawTerrain(imageData, ground.array, height);
-    c.putImageData(imageData, 0, 0); // at coords 0,0
+        ctx.font = "16px sans-serif";
+        ctx.lineCap = 'round';
 
-}
+        this.__space.eachShape(function(shape) {
+            ctx.fillStyle = shape.style();
+            shape.draw(ctx, 1, point2canvas);
+        });
+    },
 
+    handleWindowResize: function() {
+        var controlsHeight = $('#controls').height();
 
+        $('#canvas').attr("height", ($(window).innerHeight() - controlsHeight));
+        $('#canvas').attr("width", ($(window).width()));
+    },
 
-function setPixel(imageData, x, y, r, g, b, a) {
-    index = (x + y * imageData.width) * 4;
-    imageData.data[index+0] = r;
-    imageData.data[index+1] = g;
-    imageData.data[index+2] = b;
-    imageData.data[index+3] = a;
-}
-
-function drawTerrain(imageData, lineoutput, height) {
-
-    for (var x = 0; x < lineoutput.length; x++){
-        for (var y = 0; y < height; y++) {
-            if (y > lineoutput[x]) {
-                setPixel(imageData, x, y, 0, 255, 0, 255);
-            } else {
-                setPixel(imageData, x, y, 0, 0, 255, 255);
-            }
+    $statics: {
+        getRandom: function(low, high) {
+            return low + Math.floor(Math.random() * (high - low + 1));
         }
     }
+});
+
+cp.Shape.prototype.style = function() {
+    var body;
+    if (this.sensor) {
+        return "rgba(255,255,255,0)";
+    } else {
+        body = this.body;
+        if (body.isSleeping()) {
+            return "rgb(50,50,50)";
+        } else if (body.nodeIdleTime > this.space.sleepTimeThreshold) {
+            return "rgb(170,170,170)";
+        } else {
+            return styles[this.hashid % styles.length];
+        }
+    }
+};
+
+// **** Draw methods for Shapes
+
+cp.PolyShape.prototype.draw = function(ctx, scale, point2canvas)
+{
+    ctx.beginPath();
+
+    var verts = this.tVerts;
+    var len = verts.length;
+    var lastPoint = point2canvas(new cp.Vect(verts[len - 2], verts[len - 1]));
+    ctx.moveTo(lastPoint.x, lastPoint.y);
+
+    for(var i = 0; i < len; i+=2){
+        var p = point2canvas(new cp.Vect(verts[i], verts[i+1]));
+        ctx.lineTo(p.x, p.y);
+    }
+    ctx.fill();
+    ctx.stroke();
+};
+
+cp.SegmentShape.prototype.draw = function(ctx, scale, point2canvas) {
+    var oldLineWidth = ctx.lineWidth;
+    ctx.lineWidth = Math.max(1, this.r * scale * 2);
+    drawLine(ctx, point2canvas, this.ta, this.tb);
+    ctx.lineWidth = oldLineWidth;
+};
+
+cp.CircleShape.prototype.draw = function(ctx, scale, point2canvas) {
+    drawCircle(ctx, scale, point2canvas, this.tc, this.r);
+
+    // And draw a little radian so you can see the circle roll.
+    drawLine(ctx, point2canvas, this.tc, cp.v.mult(this.body.rot, this.r).add(this.tc));
+};
+
+
+// Draw methods for constraints
+
+cp.PinJoint.prototype.draw = function(ctx, scale, point2canvas) {
+    var a = this.a.local2World(this.anchr1);
+    var b = this.b.local2World(this.anchr2);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "grey";
+    drawLine(ctx, point2canvas, a, b);
+};
+
+cp.SlideJoint.prototype.draw = function(ctx, scale, point2canvas) {
+    var a = this.a.local2World(this.anchr1);
+    var b = this.b.local2World(this.anchr2);
+    var midpoint = v.add(a, v.clamp(v.sub(b, a), this.min));
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "grey";
+    drawLine(ctx, point2canvas, a, b);
+    ctx.strokeStyle = "red";
+    drawLine(ctx, point2canvas, a, midpoint);
+};
+
+cp.PivotJoint.prototype.draw = function(ctx, scale, point2canvas) {
+    var a = this.a.local2World(this.anchr1);
+    var b = this.b.local2World(this.anchr2);
+    ctx.strokeStyle = "grey";
+    ctx.fillStyle = "grey";
+    drawCircle(ctx, scale, point2canvas, a, 2);
+    drawCircle(ctx, scale, point2canvas, b, 2);
+};
+
+cp.GrooveJoint.prototype.draw = function(ctx, scale, point2canvas) {
+    var a = this.a.local2World(this.grv_a);
+    var b = this.a.local2World(this.grv_b);
+    var c = this.b.local2World(this.anchr2);
+
+    ctx.strokeStyle = "grey";
+    drawLine(ctx, point2canvas, a, b);
+    drawCircle(ctx, scale, point2canvas, c, 3);
+};
+
+cp.DampedSpring.prototype.draw = function(ctx, scale, point2canvas) {
+    var a = this.a.local2World(this.anchr1);
+    var b = this.b.local2World(this.anchr2);
+
+    ctx.strokeStyle = "grey";
+    drawSpring(ctx, scale, point2canvas, a, b);
+};
+
+var randColor = function() {
+    return Math.floor(Math.random() * 256);
+};
+
+var styles = [];
+for (var i = 0; i < 100; i++) {
+    styles.push("rgb(" + randColor() + ", " + randColor() + ", " + randColor() + ")");
 }
+var drawCircle = function(ctx, scale, point2canvas, c, radius) {
+    var c = point2canvas(c);
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, scale * radius, 0, 2*Math.PI, false);
+    ctx.fill();
+    ctx.stroke();
+};
 
-function mpd() {
-    console.log("mpding!!");
+var drawLine = function(ctx, point2canvas, a, b) {
+    a = point2canvas(a); b = point2canvas(b);
 
-//    ground.divide();
-//    console.dir(line.toArray());
-    drawTerrain(imageData, ground.divide(), height);
-    c.putImageData(imageData, 0, 0); // at coords 0,0
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+};
 
-}
-
-function boom() {
-    var boom_x = width / 2;
-    var boom_y = height /2;
-
-    drawTerrain(imageData, ground.explosion(boom_x, boom_y, 10), height);
-    c.putImageData(imageData, 0, 0); // at coords 0,0
-}
-
-function fireProjectile() {
-    var mass = 4 * 4 * 1/1000;
-
-    var rock = space.addBody(new cp.Body(mass, cp.momentForBox(mass, 4, 4)));
-    rock.setPos(v(width/2, height/2));
-    rock.setAngle(1);
-    shape = space.addShape(new cp.BoxShape(rock, 4, 4));
-
-    var ctx = c;
-
-    var self = this;
-
-    // Draw shapes
-    ctx.strokeStyle = 'black';
-    ctx.clearRect(0, 0, this.width, this.height);
-
-    this.ctx.font = "16px sans-serif";
-    this.ctx.lineCap = 'round';
-
-    this.space.eachShape(function(shape) {
-        ctx.fillStyle = shape.style();
-        shape.draw(ctx, self.scale, self.point2canvas);
-    });
-
-}
+function point2canvas(point) {
+//        return v(point.x * self.scale, (480 - point.y) * self.scale);
+    return cp.v(point.x, $('#canvas').height()-point.y);
+//        return point;
+};
