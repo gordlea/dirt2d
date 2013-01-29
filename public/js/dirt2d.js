@@ -18,13 +18,14 @@ var Dirt2d = dejavu.Class.declare({
     __space: null,
     __groundOffset: 100,
     __ctx: null,
+    __scale_x: null,
+    __scale_y: null,
 
 
     initialize: function() {
-        this.handleWindowResize();
-        $(window).resize(this.handleWindowResize);
 
-        this.__ground = new Ground(5, this.__groundOffset);
+
+        this.__ground = new Ground(8, this.__groundOffset);
 
         this.__space = new cp.Space();
         this.__space.iterations = 60;
@@ -36,21 +37,25 @@ var Dirt2d = dejavu.Class.declare({
         var ctx = canvas.getContext('2d');
         this.__ctx = ctx;
 
+        this.handleWindowResize();
         this.drawTerrain();
-        this.draw();
+        this.handleWindowResize();
+        $(window).resize(this.handleWindowResize.bind(this));
+
     },
 
     drawTerrain: function() {
-        var segWidthPixels = $('#canvas').innerWidth() / this.__ground.segments.length;
-        var pixelOffsetScaler = $('#canvas').innerHeight()/this.__groundOffset/2;
+        var segWidthPixels = 1000 / this.__ground.segments.length;
+        var pixelOffset = 1000/2;
+        var pixelOffsetScaler = 1000/this.__groundOffset;
         console.log("segWidthPixels: %d", segWidthPixels);
 
         for (var x = 0; x < this.__ground.segments.length; x++) {
 
             var segment = this.__ground.segments[x];
             var verts = [
-                x*segWidthPixels, segment[0]/pixelOffsetScaler,
-                (x+1)*segWidthPixels, segment[1]/pixelOffsetScaler,
+                x*segWidthPixels, 1000*segment[0]/(this.__groundOffset*2),
+                (x+1)*segWidthPixels, 1000*segment[1]/(this.__groundOffset*2),
                 (x+1)*segWidthPixels, 0,
                 x*segWidthPixels, 0
             ];
@@ -67,9 +72,12 @@ var Dirt2d = dejavu.Class.declare({
         ctx.font = "16px sans-serif";
         ctx.lineCap = 'round';
 
+        var scale_x = this.__scale_x;
+        var scale_y = this.__scale_y;
+
         this.__space.eachShape(function(shape) {
             ctx.fillStyle = shape.style();
-            shape.draw(ctx, 1, point2canvas);
+            shape.draw(ctx, scale_x, scale_y, point2canvas);
         });
     },
 
@@ -78,6 +86,13 @@ var Dirt2d = dejavu.Class.declare({
 
         $('#canvas').attr("height", ($(window).innerHeight() - controlsHeight));
         $('#canvas').attr("width", ($(window).width()));
+
+        this.__scale_x = $('#canvas').attr("width")/1000;
+        this.__scale_y = $('#canvas').attr("height")/1000;
+
+//        this.draw();
+//        this.drawTerrain();
+        this.draw();
     },
 
     $statics: {
@@ -105,17 +120,17 @@ cp.Shape.prototype.style = function() {
 
 // **** Draw methods for Shapes
 
-cp.PolyShape.prototype.draw = function(ctx, scale, point2canvas)
+cp.PolyShape.prototype.draw = function(ctx, scale_x, scale_y, point2canvas)
 {
     ctx.beginPath();
 
     var verts = this.tVerts;
     var len = verts.length;
-    var lastPoint = point2canvas(new cp.Vect(verts[len - 2], verts[len - 1]));
+    var lastPoint = point2canvas(new cp.Vect(verts[len - 2], verts[len - 1]), scale_x, scale_y);
     ctx.moveTo(lastPoint.x, lastPoint.y);
 
     for(var i = 0; i < len; i+=2){
-        var p = point2canvas(new cp.Vect(verts[i], verts[i+1]));
+        var p = point2canvas(new cp.Vect(verts[i], verts[i+1]),  scale_x, scale_y);
         ctx.lineTo(p.x, p.y);
     }
     ctx.fill();
@@ -212,8 +227,8 @@ var drawLine = function(ctx, point2canvas, a, b) {
     ctx.stroke();
 };
 
-function point2canvas(point) {
+function point2canvas(point, scale_x, scale_y) {
 //        return v(point.x * self.scale, (480 - point.y) * self.scale);
-    return cp.v(point.x, $('#canvas').height()-point.y);
+    return cp.v(point.x*scale_x, ($('#canvas').height()-point.y*scale_y));
 //        return point;
 };

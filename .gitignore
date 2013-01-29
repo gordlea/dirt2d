@@ -12,12 +12,5 @@ logs
 results
 
 npm-debug.log
-.idea/.name
-.idea/dirt2d.iml
-.idea/encodings.xml
-.idea/misc.xml
-.idea/modules.xml
-.idea/scopes/scope_settings.xml
-.idea/vcs.xml
-.idea/workspace.xml
 node_modules/
+.idea
