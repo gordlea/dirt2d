@@ -87,10 +87,10 @@ var Dirt2d = klass(function() {
 //            floor.setElasticity(1);
 //            floor.setFriction(1);
 //            floor.setLayers(NOT_GRABABLE_MASK);
-             this.drawTerrain();
+             this.createTerrain();
         },
 
-        drawTerrain: function() {
+        createTerrain: function() {
             if (this.groundSegments === undefined) {
                 this.groundSegments = [];
             } else {
@@ -207,7 +207,7 @@ var Dirt2d = klass(function() {
             this.lastStep = now;
 
             if (this.terrainDirty) {
-                this.drawTerrain();
+                this.createTerrain();
             }
 
 //            while (this.deadBodies.length > 0) {

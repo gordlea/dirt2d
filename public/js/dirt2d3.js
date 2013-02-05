@@ -74,10 +74,10 @@ var Dirt2d = klass(function() {
             var wall_r = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(640,0), v(640,640), 0));
             var ceiling = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0,640), v(640,640), 0));
 //            floor.setLayers(NOT_GRABABLE_MASK);
-             this.drawTerrain();
+             this.createTerrain();
         },
 
-        drawTerrain: function() {
+        createTerrain: function() {
             if (this.groundSegments === undefined) {
                 this.groundSegments = [];
             } else {
@@ -230,7 +230,7 @@ var Dirt2d = klass(function() {
             this.lastStep = now;
 
             if (this.terrainDirty) {
-                this.drawTerrain();
+                this.createTerrain();
             }
 
 //            while (this.deadBodies.length > 0) {

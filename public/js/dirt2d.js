@@ -20,12 +20,13 @@ var Dirt2d = dejavu.Class.declare({
     __ctx: null,
     __scale_x: null,
     __scale_y: null,
-
+    __unitCount: 4,
+    __units: [],
 
     initialize: function() {
 
 
-        this.__ground = new Ground(8, this.__groundOffset, 4);
+        this.__ground = new Ground(8, this.__groundOffset, this.__unitCount);
 
         this.__space = new cp.Space();
         this.__space.iterations = 60;
@@ -38,13 +39,14 @@ var Dirt2d = dejavu.Class.declare({
         this.__ctx = ctx;
 
         this.handleWindowResize();
-        this.drawTerrain();
+        this.createTerrain();
+        this.createUnits();
         this.handleWindowResize();
         $(window).resize(this.handleWindowResize.bind(this));
 
     },
 
-    drawTerrain: function() {
+    createTerrain: function() {
         var segWidthPixels = 1000 / this.__ground.segments.length;
         var pixelOffset = 1000/2;
         var pixelOffsetScaler = 1000/this.__groundOffset;
@@ -62,7 +64,45 @@ var Dirt2d = dejavu.Class.declare({
 
             this.__space.addShape(new cp.PolyShape(this.__space.staticBody, verts, cp.v(0,0)));
         }
+
+//        var singlePieceVerts =
     },
+
+    createUnits: function() {
+        var segWidthPixels = 1000 / this.__ground.segments.length;
+
+        for (var i = 0; i < this.__unitCount; i++) {
+            var space = this.__space;
+            var width = 4;
+            var height = 4;
+            var mass = width * height * (1/1000);
+            var projectileBody = new cp.Body(mass, cp.momentForBox(mass, width, height));
+//            projectileBody.id = UUIDjs.create().hex;
+            var tank = space.addBody(projectileBody);
+            console.log("position? %d %d", this.__ground.platforms[i][0], this.__ground.platforms[i][1])
+            tank.setPos(cp.v(this.__ground.platforms[i][0]*segWidthPixels, this.__ground.platforms[i][1]*1000/(this.__groundOffset*2)));
+//            rock.setAngle(1);
+//            shape = space.addShape(new cp.RectShape(rock, 4, v(0,0)));
+
+
+            console.log("creating unit %d of %d", i + 1, this.__unitCount);
+//
+//            var unit = new Unit(this.__ground.platforms[i]);
+//
+//            this.__units.push(unit);
+
+//            var verts = unit.getVerts(segWidthPixels, 1000/(this.__groundOffset*2));
+            var shape = new cp.PolyShape(tank, [-8, 16, 8, 16, 8, 0, -8, 0], cp.v(0,0))
+            shape.setFriction(0.3);
+            shape.setElasticity(0.3);
+            shape.setCollisionType(2);
+            this.__space.addShape(shape);
+//            rock.applyImpulse(cp.v(3, 3));
+
+
+        }
+    },
+
 
     draw: function() {
         var ctx = this.__ctx;

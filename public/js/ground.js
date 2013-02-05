@@ -48,8 +48,10 @@ var Ground = dejavu.Class.declare({
     createPlatforms: function(number) {
         for (var i = 0; i < number; i++) {
             var xCoord = Dirt2d.getRandom(5, 250);
-            this.platforms.push(xCoord);
+
             var height = this.segments[xCoord][0];
+
+            this.platforms.push([xCoord, height]);
             this.segments[xCoord][1] = height
 
             this.segments[xCoord-4][1] = height;
