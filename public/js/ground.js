@@ -3,8 +3,9 @@ var Ground = dejavu.Class.declare({
     _maxOffset: null,
     _minOffset: null,
     segments: [],
+    platforms: [],
 
-    initialize: function(divCount, offset) {
+    initialize: function(divCount, offset, platforms) {
 
         this._maxOffset = offset;
         this._minOffset = -1 * this._maxOffset;
@@ -16,6 +17,7 @@ var Ground = dejavu.Class.declare({
         for (var di = 0; di < divCount; di++) {
             this.divide();
         }
+        this.createPlatforms(platforms);
     },
 
     divide: function() {
@@ -41,5 +43,21 @@ var Ground = dejavu.Class.declare({
 
         this.segments = newSegments;
         console.log("line now has %d segments", this.segments.length);
+    },
+
+    createPlatforms: function(number) {
+        for (var i = 0; i < number; i++) {
+            var xCoord = Dirt2d.getRandom(5, 250);
+            this.platforms.push(xCoord);
+            var height = this.segments[xCoord][0];
+            this.segments[xCoord][1] = height
+
+            this.segments[xCoord-4][1] = height;
+            for (var j = -3; j <= 3; j++) {
+                this.segments[xCoord+j][0] = height;
+                this.segments[xCoord+j][1] = height;
+            }
+            this.segments[xCoord+4][0] = height;
+        }
     }
 });

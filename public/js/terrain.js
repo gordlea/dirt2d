@@ -1,42 +1,22 @@
-var TerrainBlock = dejavu.Class.declare({
-    $name: "TerrainBlock",
+var Terrain= dejavu.Class.declare({
+    $name: "Terrain",
+    __blocks: [],
+    __groundOffset: 100,
+    __ground: null,
 
-    initialize: function(divCount, offset) {
+    initialize: function(width, height) {
 
-        this._maxOffset = offset;
-        this._minOffset = -1 * this._maxOffset;
-
-        this.segments.push([
-            offset, offset
-        ]);
-
-        for (var di = 0; di < divCount; di++) {
-            this.divide();
-        }
-    },
-
-    divide: function() {
-        var newSegments = [];
-
-        for (var i = 0; i < this.segments.length; i++) {
+        this.__ground = new Ground(8, this.__groundOffset);
+        var pixelOffsetScaler = height/this.__groundOffset;
 
 
-            var offset = Dirt2d.getRandom(this._minOffset, this._maxOffset);
-
-
-            var seg = this.segments[i];
-
-            var midY = (seg[0]+seg[1])/2;
-
-            newSegments.push([seg[0], midY+offset]);
-            newSegments.push([midY+offset, seg[1]]);
-
+        for (var x = 0; x < width; x++) {
+            for (var y = 0; y <  this.__ground.segments[x]; y++) {
+                this._blocks.push(new TerrainBlock(x,y))
+            }
         }
 
-        this._minOffset /= 2;
-        this._maxOffset /= 2;
-
-        this.segments = newSegments;
-        console.log("line now has %d segments", this.segments.length);
     }
+
+
 });

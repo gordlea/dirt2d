@@ -25,7 +25,7 @@ var Dirt2d = dejavu.Class.declare({
     initialize: function() {
 
 
-        this.__ground = new Ground(8, this.__groundOffset);
+        this.__ground = new Ground(8, this.__groundOffset, 4);
 
         this.__space = new cp.Space();
         this.__space.iterations = 60;
