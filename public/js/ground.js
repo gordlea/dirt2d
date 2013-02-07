@@ -7,6 +7,8 @@ var Ground = dejavu.Class.declare({
     __shape: null,
     __stage: null,
     __worldDimensions: null,
+    __platformWidth: 3,
+
     initialize: function(divCount, dimensions, platforms, stage) {
         this.__stage = stage;
         this.__worldDimensions = dimensions;
@@ -20,7 +22,7 @@ var Ground = dejavu.Class.declare({
         for (var di = 0; di < divCount; di++) {
             this.divide();
         }
-//        this.createPlatforms(platforms);
+        this.createPlatforms(platforms);
         console.log("line now has %d segments", this.segments.length);
     },
 
@@ -51,19 +53,22 @@ var Ground = dejavu.Class.declare({
 
     createPlatforms: function(number) {
         for (var i = 0; i < number; i++) {
-            var xCoord = Dirt2d.getRandom(5, 250);
+            var xCoord = Dirt2d.getRandom(this.__platformWidth, this.segments.length - this.__platformWidth);
+
 
             var height = this.segments[xCoord][0];
 
             this.platforms.push([xCoord, height]);
             this.segments[xCoord][1] = height
 
-            this.segments[xCoord-4][1] = height;
-            for (var j = -3; j <= 3; j++) {
+            var phw = Math.floor(this.__platformWidth/2)
+
+            this.segments[xCoord-phw][1] = height;
+            for (var j = -1*phw; j <= phw; j++) {
                 this.segments[xCoord+j][0] = height;
                 this.segments[xCoord+j][1] = height;
             }
-            this.segments[xCoord+4][0] = height;
+            this.segments[xCoord+phw+1][0] = height;
         }
     },
 
