@@ -4,20 +4,24 @@ var Ground = dejavu.Class.declare({
     _minOffset: null,
     segments: [],
     platforms: [],
-
-    initialize: function(divCount, offset, platforms) {
-
-        this._maxOffset = offset;
+    __shape: null,
+    __stage: null,
+    __worldDimensions: null,
+    initialize: function(divCount, dimensions, platforms, stage) {
+        this.__stage = stage;
+        this.__worldDimensions = dimensions;
+        this._maxOffset = dimensions.y/2;
         this._minOffset = -1 * this._maxOffset;
 
         this.segments.push([
-            offset, offset
+            this._maxOffset, this._maxOffset
         ]);
 
         for (var di = 0; di < divCount; di++) {
             this.divide();
         }
-        this.createPlatforms(platforms);
+//        this.createPlatforms(platforms);
+        console.log("line now has %d segments", this.segments.length);
     },
 
     divide: function() {
@@ -42,7 +46,7 @@ var Ground = dejavu.Class.declare({
         this._maxOffset /= 2;
 
         this.segments = newSegments;
-        console.log("line now has %d segments", this.segments.length);
+
     },
 
     createPlatforms: function(number) {
@@ -61,5 +65,38 @@ var Ground = dejavu.Class.declare({
             }
             this.segments[xCoord+4][0] = height;
         }
+    },
+
+    draw: function(scale_x, scale_y) {
+        if (this.__shape !== null) {
+           this.__stage.removeChild(this.__shape);
+        }
+
+        this.__shape = new Shape();
+        this.__shape.graphics.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*scale_x);
+        this.__shape.graphics.beginFill("FFFFFF")   ;
+
+        var segmentWidth = this.__worldDimensions.x/this.segments.length;
+
+        for (var i = 0; i < this.segments.length; i++) {
+
+
+            var segment = this.segments[i];
+            if (i === 0) {
+                this.__shape.graphics.moveTo(0,this.__worldDimensions.y*scale_y - segment[0]*scale_y)
+            }
+
+            this.__shape.graphics.lineTo((i+1)*segmentWidth*scale_x,this.__worldDimensions.y*scale_y - segment[1]*scale_y)
+
+        }
+
+        this.__shape.graphics.lineTo(this.__worldDimensions.x*scale_x, this.__worldDimensions.y*scale_y);
+        this.__shape.graphics.lineTo(0, this.__worldDimensions.y*scale_y);
+        this.__shape.graphics.closePath();
+
+        this.__shape.graphics.endStroke();
+        this.__stage.addChild(this.__shape);
+        this.__stage.update();
+
     }
 });
