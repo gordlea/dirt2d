@@ -4,7 +4,7 @@ var Ground = dejavu.Class.declare({
     _minOffset: null,
     segments: [],
     platforms: [],
-    __shape: null,
+    __bodyShape: null,
     __stage: null,
     __worldDimensions: null,
     __platformWidth: 3,
@@ -52,13 +52,15 @@ var Ground = dejavu.Class.declare({
     },
 
     createPlatforms: function(number) {
+        var segmentWidth = this.__worldDimensions.x/this.segments.length;
+
         for (var i = 0; i < number; i++) {
             var xCoord = Dirt2d.getRandom(this.__platformWidth, this.segments.length - this.__platformWidth);
 
 
             var height = this.segments[xCoord][0];
 
-            this.platforms.push([xCoord, height]);
+            this.platforms.push([xCoord*segmentWidth, height]);
             this.segments[xCoord][1] = height
 
             var phw = Math.floor(this.__platformWidth/2)
@@ -73,13 +75,13 @@ var Ground = dejavu.Class.declare({
     },
 
     draw: function(scale_x, scale_y) {
-        if (this.__shape !== null) {
-           this.__stage.removeChild(this.__shape);
+        if (this.__bodyShape !== null) {
+           this.__stage.removeChild(this.__bodyShape);
         }
 
-        this.__shape = new Shape();
-        this.__shape.graphics.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*scale_x);
-        this.__shape.graphics.beginFill("FFFFFF")   ;
+        this.__bodyShape = new Shape();
+        this.__bodyShape.graphics.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*scale_x);
+        this.__bodyShape.graphics.beginFill("FFFFFF")   ;
 
         var segmentWidth = this.__worldDimensions.x/this.segments.length;
 
@@ -88,19 +90,19 @@ var Ground = dejavu.Class.declare({
 
             var segment = this.segments[i];
             if (i === 0) {
-                this.__shape.graphics.moveTo(0,this.__worldDimensions.y*scale_y - segment[0]*scale_y)
+                this.__bodyShape.graphics.moveTo(0,this.__worldDimensions.y*scale_y - segment[0]*scale_y)
             }
 
-            this.__shape.graphics.lineTo((i+1)*segmentWidth*scale_x,this.__worldDimensions.y*scale_y - segment[1]*scale_y)
+            this.__bodyShape.graphics.lineTo((i+1)*segmentWidth*scale_x,this.__worldDimensions.y*scale_y - segment[1]*scale_y)
 
         }
 
-        this.__shape.graphics.lineTo(this.__worldDimensions.x*scale_x, this.__worldDimensions.y*scale_y);
-        this.__shape.graphics.lineTo(0, this.__worldDimensions.y*scale_y);
-        this.__shape.graphics.closePath();
+        this.__bodyShape.graphics.lineTo(this.__worldDimensions.x*scale_x, this.__worldDimensions.y*scale_y);
+        this.__bodyShape.graphics.lineTo(0, this.__worldDimensions.y*scale_y);
+        this.__bodyShape.graphics.closePath();
 
-        this.__shape.graphics.endStroke();
-        this.__stage.addChild(this.__shape);
+        this.__bodyShape.graphics.endStroke();
+        this.__stage.addChild(this.__bodyShape);
         this.__stage.update();
 
     }

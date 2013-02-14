@@ -29,6 +29,7 @@ var Dirt2d = dejavu.Class.declare({
     __space: null,
     __canvas: null,
     __stage: null,
+    __units: [],
 
 
     initialize: function() {
@@ -46,9 +47,43 @@ var Dirt2d = dejavu.Class.declare({
 
         this.createTerrain();
 
+        this.createUnits();
+
         this.handleWindowResize();
         $(window).resize(this.handleWindowResize.bind(this));
+        var spinner = $( "#angle_value" ).spinner({
+            min: 0,
+            max: 180,
+            step: 1,
+            value: 0,
+            spin: this.handleAngleSpinnerChange.bind(this),
+            change: this.handleAngleSpinnerChange.bind(this)
+        });
 
+        $( "#angle_slider" ).slider({
+            min: 0,
+            max: 180,
+            step: 1,
+            value: 0,
+            slide: this.handleAngleSliderChange.bind(this)
+        });
+
+//        $( "#angle_value" ).spinner("value",0);
+
+
+    },
+
+    handleAngleSliderChange: function(event, ui) {
+        $( "#angle_value").spinner("value", ui.value);
+        for (var i = 0; i < this.__units.length; i++) {
+            this.__units[i].setGunAngleDegrees(ui.value);
+        }
+    },
+    handleAngleSpinnerChange: function(event, ui) {
+        $( "#angle_slider" ).slider("value", ui.value);
+        for (var i = 0; i < this.__units.length; i++) {
+            this.__units[i].setGunAngleDegrees(ui.value);
+        }
     },
 
     createTerrain: function() {
@@ -61,6 +96,25 @@ var Dirt2d = dejavu.Class.declare({
         this.__ground.draw(this.__worldScreenScale.x, this.__worldScreenScale.y);
 
     },
+
+    createUnits: function() {
+        var colors = ["FF0000", "00FF00", "0000FF", "0F0F0F"];
+        for (var i = 0; i < this.__playerCount; i++) {
+            this.__ground.platforms[i]
+            this.__units.push(new Unit(this.__ground.platforms[i], this.__stage, this.__worldDimensions, colors[i]));
+        }
+    },
+
+    drawUnits: function() {
+        for (var i = 0; i < this.__units.length; i++) {
+            this.__units[i].updateScale(this.__worldScreenScale.x, this.__worldScreenScale.y);
+
+            if (!this.__units[i].drawn) {
+                this.__units[i].draw();
+            }
+        }
+    },
+
 
     handleWindowResize: function() {
         var controlsHeight = $('#controls').outerHeight();
@@ -92,7 +146,10 @@ var Dirt2d = dejavu.Class.declare({
         $('#canvas').attr("height", newHeight);
         $('#canvas').attr("width", newWidth);
 
+        $('#controls').css("width", newWidth);
+
         this.drawTerrain();
+        this.drawUnits();
     },
     $statics: {
         getRandom: function(low, high) {

@@ -5,3 +5,20 @@ body {
 canvas {
     background-color: lightblue;
 }
+
+#angle_slider {
+    width: 30%;
+    display: inline-block;
+    margin-top: 0.4em;
+}
+
+.ui-spinner {
+    width: 8%;
+    margin-right: 1em;
+}
+
+#controls {
+    display: block;
+    height: 2em;
+    margin-bottom: 0.5em;
+}
