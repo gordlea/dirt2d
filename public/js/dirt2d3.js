@@ -17,7 +17,7 @@ var requestAnimationFrame = window.requestAnimationFrame
 };
 
 var Dirt2d = klass(function() {
-    var space = this.space = new cp.Space();
+    var space = this.physSpace = new cp.Space();
     space.iterations = 60;
     space.gravity = v(0, -200);
     space.sleepTimeThreshold = 0.5;
@@ -66,13 +66,13 @@ var Dirt2d = klass(function() {
 
 //            var segs = this.ground.segments;
 
-            var floor = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0, 0), v(640, 0), 0));
+            var floor = this.physSpace.addShape(new cp.SegmentShape(this.physSpace.staticBody, v(0, 0), v(640, 0), 0));
             floor.setElasticity(1);
             floor.setFriction(1);
 
-            var wall_l = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0,0), v(0,640), 0));
-            var wall_r = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(640,0), v(640,640), 0));
-            var ceiling = this.space.addShape(new cp.SegmentShape(this.space.staticBody, v(0,640), v(640,640), 0));
+            var wall_l = this.physSpace.addShape(new cp.SegmentShape(this.physSpace.staticBody, v(0,0), v(0,640), 0));
+            var wall_r = this.physSpace.addShape(new cp.SegmentShape(this.physSpace.staticBody, v(640,0), v(640,640), 0));
+            var ceiling = this.physSpace.addShape(new cp.SegmentShape(this.physSpace.staticBody, v(0,640), v(640,640), 0));
 //            floor.setLayers(NOT_GRABABLE_MASK);
              this.createTerrain();
         },
@@ -85,7 +85,7 @@ var Dirt2d = klass(function() {
                 for (var j = 0; j < this.groundSegments.length; j++) {
                     var deadSeg = this.groundSegments[j];
 
-                    this.space.removeShape(deadSeg);
+                    this.physSpace.removeShape(deadSeg);
 
 //                }
 
@@ -101,9 +101,9 @@ var Dirt2d = klass(function() {
 //                var start = segs[i][0];
 //                var end = segs[i][1];
 
-                var groundSegment = new cp.SegmentShape(this.space.staticBody, v(i-1, segs[i-1]), v(i,segs[i]), 0);
+                var groundSegment = new cp.SegmentShape(this.physSpace.staticBody, v(i-1, segs[i-1]), v(i,segs[i]), 0);
                 groundSegment.setCollisionType(1);
-                this.space.addShape(groundSegment);
+                this.physSpace.addShape(groundSegment);
                 this.groundSegments.push(groundSegment);
             }
 
@@ -113,7 +113,7 @@ var Dirt2d = klass(function() {
         },
 
         fireProjectile: function() {
-            var space = this.space;
+            var space = this.physSpace;
             var width = 5;
             var height = 5;
             var mass = width * height * (1/1000);
@@ -133,7 +133,7 @@ var Dirt2d = klass(function() {
 
 
         fireBall: function() {
-            var space = this.space;
+            var space = this.physSpace;
             var radius = Dirt2d.getRandom(2,8)
             var mass = radius * radius * (1/500) * Dirt2d.getRandom(1,10);
             var moment = cp.momentForCircle(mass, 0, radius, v(0,0))
@@ -150,7 +150,7 @@ var Dirt2d = klass(function() {
         },
 
         fireTriangle: function() {
-            var space = this.space;
+            var space = this.physSpace;
             var radius = Dirt2d.getRandom(6,16)
             var mass = radius * radius * (1/500) * Dirt2d.getRandom(1,10);
             var verts = [
@@ -176,7 +176,7 @@ var Dirt2d = klass(function() {
         },
 
     update: function(dt) {
-        this.space.step(dt);
+        this.physSpace.step(dt);
     },
 
         draw: function() {
@@ -191,7 +191,7 @@ var Dirt2d = klass(function() {
             this.ctx.font = "16px sans-serif";
             this.ctx.lineCap = 'round';
 
-            this.space.eachShape(function(shape) {
+            this.physSpace.eachShape(function(shape) {
                 ctx.fillStyle = shape.style();
                 shape.draw(ctx, self.scale, self.point2canvas);
             });
@@ -239,9 +239,9 @@ var Dirt2d = klass(function() {
 //                for (var i = 0; i < this.deadBodies.length; i++) {
                 var db =this.deadBodies[bodyId];
                 db.eachShape(function(shape) {
-                    this.space.removeShape(shape);
+                    this.physSpace.removeShape(shape);
                 }.bind(this));
-                    this.space.removeBody(db);
+                    this.physSpace.removeBody(db);
 
 //                }
             }
@@ -253,7 +253,7 @@ var Dirt2d = klass(function() {
             if(dt > 0) {
                 this.fps = 0.7*this.fps + 0.3*(1/dt);
             }
-            var lastNumActiveShapes = this.space.activeShapes.count;
+            var lastNumActiveShapes = this.physSpace.activeShapes.count;
 
             // Limit the amount of time thats passed to 0.1 - if the user switches tabs or
             // has a slow computer, we'll just slow the simulation down.
@@ -382,7 +382,7 @@ cp.Shape.prototype.style = function() {
         body = this.body;
         if (body.isSleeping()) {
             return "rgb(50,50,50)";
-        } else if (body.nodeIdleTime > this.space.sleepTimeThreshold) {
+        } else if (body.nodeIdleTime > this.physSpace.sleepTimeThreshold) {
             return "rgb(170,170,170)";
         } else {
             return styles[this.hashid % styles.length];

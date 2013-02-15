@@ -1,31 +1,36 @@
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <link rel="stylesheet" type="text/css" href="dirt2d.css"/>
-        <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css"/>
 
-        <script src="js/cp.min.js"></script>
+    <script src="js/lib/cp.min.js"></script>
     <script src="js/lib/dejavu.js"></script>
-        <script src="js/lib/easel.js"></script>
+    <script src="http://code.createjs.com/createjs-2013.02.12.min.js"></script>
 
 
-        <script src="http://code.jquery.com/jquery-1.9.0.js"></script>
-        <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+    <script src="http://code.jquery.com/jquery-1.9.0.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
 
-        <script src="js/dirt2d2.js"></script>
-        <script src="js/ground.js"></script>
-        <script src="js/unit.js"></script>
+    <script src="js/dirt2d2.js"></script>
+    <script src="js/ground.js"></script>
+    <script src="js/unit.js"></script>
+    <script src="js/projectile.js"></script>
 
 
-    </head>
-    <body id="thebody">
-        <div id="controls">
-            <label for="angle_value">Elevation:</label>
-            <input id="angle_value" name="angle" />
-            <div id="angle_slider"></div>
-        </div>
-        <canvas id="canvas"></canvas>
 
-    </body>
+
+
+</head>
+<body id="thebody">
+<div id="controls">
+    <label for="angle_value">Elevation:</label>
+    <input id="angle_value" name="angle"/>
+    <div id="angle_slider"></div>
+    <button id="fire_button">Fire!</button>
+</div>
+<canvas id="canvas"></canvas>
+
+</body>
 
 </html>

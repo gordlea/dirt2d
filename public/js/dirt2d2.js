@@ -13,6 +13,13 @@ var ASPECT_RATIO = 1.6;
 $(function() {
     var d2d = new Dirt2d();
 });
+var v = cp.v;
+var physSpace = new cp.Space();
+physSpace.iterations = 60;
+physSpace.gravity = v(0, -500);
+physSpace.sleepTimeThreshold = 0.5;
+physSpace.collisionSlop = 0.5;
+physSpace.sleepTimeThreshold = 0.5;
 
 var Dirt2d = dejavu.Class.declare({
     $name: 'Dirt2d',
@@ -29,7 +36,8 @@ var Dirt2d = dejavu.Class.declare({
     __space: null,
     __canvas: null,
     __stage: null,
-    __units: [],
+    units: [],
+    projectiles: [],
 
 
     initialize: function() {
@@ -43,7 +51,7 @@ var Dirt2d = dejavu.Class.declare({
         this.__space.sleepTimeThreshold = 0.5;
 
         this.__canvas = document.getElementById('canvas');
-        this.__stage = new Stage(this.__canvas);
+        this.__stage = new createjs.Stage(this.__canvas);
 
         this.createTerrain();
 
@@ -70,21 +78,50 @@ var Dirt2d = dejavu.Class.declare({
 
 //        $( "#angle_value" ).spinner("value",0);
 
+        $("#fire_button").button().click(function (event) {
+            console.log("fire");
+            for (var i = 0; i < this.units.length; i++) {
+                var p  = this.units[i].fire();
+                this.projectiles.push(p);
+            }
+        }.bind(this));
+
+        createjs.Ticker.addEventListener("tick", this.handleTick.bind(this));
 
     },
 
+    handleTick: function() {
+
+        var interval = createjs.Ticker.getInterval();
+        physSpace.step(interval);
+        for (var i = 0; i < this.projectiles.length; i++) {
+            var p  = this.projectiles[i];
+            p.updateScale(this.__worldScreenScale.x,this.__worldScreenScale.y)
+
+            if (!p.drawn) {
+                p.draw();
+            }
+
+            p.tick();
+        }
+
+        this.__stage.update();
+     },
+
     handleAngleSliderChange: function(event, ui) {
         $( "#angle_value").spinner("value", ui.value);
-        for (var i = 0; i < this.__units.length; i++) {
-            this.__units[i].setGunAngleDegrees(ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunAngleDegrees(ui.value);
         }
     },
     handleAngleSpinnerChange: function(event, ui) {
         $( "#angle_slider" ).slider("value", ui.value);
-        for (var i = 0; i < this.__units.length; i++) {
-            this.__units[i].setGunAngleDegrees(ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunAngleDegrees(ui.value);
         }
     },
+
+
 
     createTerrain: function() {
         this.__ground = new Ground(7, this.__worldDimensions, this.__playerCount, this.__stage);
@@ -101,16 +138,16 @@ var Dirt2d = dejavu.Class.declare({
         var colors = ["FF0000", "00FF00", "0000FF", "0F0F0F"];
         for (var i = 0; i < this.__playerCount; i++) {
             this.__ground.platforms[i]
-            this.__units.push(new Unit(this.__ground.platforms[i], this.__stage, this.__worldDimensions, colors[i]));
+            this.units.push(new Unit(this.__ground.platforms[i], this.__stage, this.__worldDimensions, colors[i]));
         }
     },
 
     drawUnits: function() {
-        for (var i = 0; i < this.__units.length; i++) {
-            this.__units[i].updateScale(this.__worldScreenScale.x, this.__worldScreenScale.y);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].updateScale(this.__worldScreenScale.x, this.__worldScreenScale.y);
 
-            if (!this.__units[i].drawn) {
-                this.__units[i].draw();
+            if (!this.units[i].drawn) {
+                this.units[i].draw();
             }
         }
     },

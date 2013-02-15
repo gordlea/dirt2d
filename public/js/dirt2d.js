@@ -21,7 +21,7 @@ var Dirt2d = dejavu.Class.declare({
     __scale_x: null,
     __scale_y: null,
     __unitCount: 4,
-    __units: [],
+    units: [],
 
     initialize: function() {
 
@@ -150,7 +150,7 @@ cp.Shape.prototype.style = function() {
         body = this.body;
         if (body.isSleeping()) {
             return "rgb(50,50,50)";
-        } else if (body.nodeIdleTime > this.space.sleepTimeThreshold) {
+        } else if (body.nodeIdleTime > this.physSpace.sleepTimeThreshold) {
             return "rgb(170,170,170)";
         } else {
             return styles[this.hashid % styles.length];

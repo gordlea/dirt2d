@@ -1,3 +1,6 @@
+var Graphics = createjs.Graphics;
+var Shape = createjs.Shape;
+
 var Ground = dejavu.Class.declare({
     $name: "Ground",
     _maxOffset: null,
