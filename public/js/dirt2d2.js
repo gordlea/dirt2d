@@ -71,6 +71,23 @@ var Dirt2d = dejavu.Class.declare({
             slide: this.handleAngleSliderChange.bind(this)
         });
 
+        var powerSpinner = $( "#power_value" ).spinner({
+            min: 0,
+            max: 100,
+            step: 1,
+            value: 50,
+            spin: this.handlePowerSpinnerChange.bind(this),
+            change: this.handlePowerSpinnerChange.bind(this)
+        });
+
+        $( "#power_slider" ).slider({
+            min: 0,
+            max: 100,
+            step: 1,
+            value: 50,
+            slide: this.handlePowerSliderChange.bind(this)
+        });
+
 //        $( "#angle_value" ).spinner("value",0);
 
         $("#fire_button").button().click(function (event) {
@@ -79,27 +96,6 @@ var Dirt2d = dejavu.Class.declare({
                 var p  = this.units[i].fire();
                 this.projectiles.push(p);
             }
-
-//            var width = 50;
-//            var height = 60;
-//            var mass = width * height * 1/1000;
-//            var rock = physSpace.addBody(new cp.Body(mass, cp.momentForBox(mass, width, height)));
-//            rock.setPos(v(500, 100));
-//            rock.setAngle(1);
-//            var shape = physSpace.addShape(new cp.BoxShape(rock, width, height));
-//            shape.setFriction(0.3);
-//            shape.setElasticity(0.3);
-//            var space = physSpace;
-////            for (var i = 1; i <= 10; i++) {
-//                var radius = 20;
-//                var mass = 3;
-//                var body = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, v(0, 0))));
-//                body.setPos(v(200, (2 * radius + 5) * 2));
-//                var circle = space.addShape(new cp.CircleShape(body, radius, v(0, 0)));
-//                circle.setElasticity(0.8);
-//                circle.setFriction(1);
-////            }
-
         }.bind(this));
         createjs.Ticker.setFPS(60);
         createjs.Ticker.addEventListener("tick", this.handleTick.bind(this));
@@ -150,6 +146,18 @@ var Dirt2d = dejavu.Class.declare({
     },
 
 
+    handlePowerSliderChange: function(event, ui) {
+        $( "#power_value").spinner("value", ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunPower(ui.value);
+        }
+    },
+    handlePowerSpinnerChange: function(event, ui) {
+        $( "#power_slider" ).slider("value", ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunPower(ui.value);
+        }
+    },
 
     createTerrain: function() {
         this.__ground = new Ground(7, this.__worldDimensions, this.__playerCount, this.__stage);

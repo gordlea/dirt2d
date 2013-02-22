@@ -10,6 +10,7 @@ var Unit = dejavu.Class.declare({
     color: null,
     __worldDimensions: null,
     __gunAngle: null,
+    __gunPower: 0.5,
     scaleX: null,
     scaleY: null,
     drawn: null,
@@ -84,6 +85,10 @@ var Unit = dejavu.Class.declare({
 
     },
 
+    setGunPower: function(amount) {
+        this.__gunPower = amount/100;
+    },
+
     setGunAngleDegrees: function(degrees) {
 
         if (this.__gunShape !== null) {
@@ -115,7 +120,7 @@ var Unit = dejavu.Class.declare({
 //        var gend_y = this.__gunShape.y + -30 * Math.sin(this.__gunAngle);
 
 
-        var p = new Projectile(this.__stage, this.__gunAngle, 0.5, this.__position[0] + this.gend_x-2, this.__position[1]-this.gend_y, this.__worldDimensions);
+        var p = new Projectile(this.__stage, this.__gunAngle, this.__gunPower, this.__position[0] + this.gend_x-2, this.__position[1]-this.gend_y, this.__worldDimensions);
         return p;
     }
 
