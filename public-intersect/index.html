@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ARRRRGGG</title>
+</head>
+<script type="text/javascript" src="js/2D.js"></script>
+
+<script type="text/javascript" src="js/paper.js"></script>
+<script src="http://code.jquery.com/jquery-1.9.0.js"></script>
+
+
+<body>
+<div id="dynamicCanvasDiv">
+<canvas id="dynamicCanvas"></canvas>
+</div>
+</body>
+<script type="text/javascript">
+    function createCanvas(e_resize)                               //create canvas according to browser resolution and add to html
+    {
+        //app = 121 (16+90+16)px, table = 200px, taskBar + browserBar = 118px, scrollBar =24px
+        var browserWidth = $(window).width() - 20;
+        var browserHeight = $(window).height();
+        var canvasHeight = browserHeight;
+        var canvasWidth = browserWidth;
+
+//        if (browserWidth < 1000)
+//            canvasWidth = 1000;                                           //minimum canvas Width = 1000, height = 670
+
+        if (browserHeight > 670 && browserHeight < 1050)                  //my laptop
+            canvasHeight = browserHeight-122;                             //670 - app
+        if (browserHeight > 1050)                                         //if full HD1080
+            canvasHeight = browserHeight - 380;                           //display table too, canvasHeight = (browserHeight - (taskBar + broserBar + app + table))
+
+        if(e_resize)
+        {
+            paper.view.viewSize = [canvasWidth, canvasHeight];            //viewSize resizes canvas too.
+            return;
+        }
+
+        var content = '<canvas id="dynamicCanvas" width="'+canvasWidth+'" height="'+canvasHeight+'""></canvas>';
+        $("#dynamicCanvasDiv").empty();
+        $("#dynamicCanvasDiv").append(content);
+
+    }
+
+    $(window).resize(function(){ if (paper.view !== null) createCanvas(true); })
+    createCanvas(false);
+//    });                 //on browser window resize, resize view
+</script>
+<script type="text/paperscript" canvas="dynamicCanvas" src="js/main.js"></script>
+
+</html>
