@@ -94,6 +94,9 @@ var Unit = dejavu.Class.declare({
         if (this.__gunShape !== null) {
             this.__stage.removeChild(this.__gunShape);
         }
+
+        degrees = 180 - degrees;
+
         this.__gunAngle = degrees*Math.PI/180;
 
         this.__gunShape = new createjs.Shape();
