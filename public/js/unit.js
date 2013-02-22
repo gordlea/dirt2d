@@ -13,6 +13,8 @@ var Unit = dejavu.Class.declare({
     scaleX: null,
     scaleY: null,
     drawn: null,
+    gend_x: null,
+    gend_y: null,
 
     initialize: function(position, stage, dimensions, color) {
         this.__position = position;
@@ -70,10 +72,10 @@ var Unit = dejavu.Class.declare({
         gg.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*this.scaleX);
         gg.mt(20,0);
 
-        var gend_x = 10+30 * Math.cos(this.__gunAngle);
-        var gend_y = -30 * Math.sin(this.__gunAngle);
+        this.gend_x = 10+30 * Math.cos(this.__gunAngle);
+        this.gend_y = -30 * Math.sin(this.__gunAngle);
 
-        gg.lt(gend_x, gend_y);
+        gg.lt(this.gend_x, this.gend_y);
         gg.es();
         this.__stage.addChild(this.__gunShape);
         this.__stage.update();
@@ -98,10 +100,10 @@ var Unit = dejavu.Class.declare({
         gg.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*this.scaleX);
         gg.mt(10,0);
 
-        var gend_x = 10 + 30 * Math.cos(this.__gunAngle);
-        var gend_y = -30 * Math.sin(this.__gunAngle);
+        this.gend_x = 10+30 * Math.cos(this.__gunAngle);
+        this.gend_y = -30 * Math.sin(this.__gunAngle);
 
-        gg.lt(gend_x, gend_y);
+        gg.lt(this.gend_x, this.gend_y);
         gg.es();
         this.__stage.addChild(this.__gunShape);
         this.__stage.update();
@@ -109,11 +111,13 @@ var Unit = dejavu.Class.declare({
 
 
     fire: function() {
-        var gend_x = this.__gunShape.x + 10 + 30 * Math.cos(this.__gunAngle);
-        var gend_y = this.__gunShape.y + -30 * Math.sin(this.__gunAngle);
-        var p = new Projectile(this.__stage, this.__gunAngle, 8, this.__position[0], this.__position[1], this.__worldDimensions);
+//        var gend_x = this.__gunShape.x + 10 + 30 * Math.cos(this.__gunAngle);
+//        var gend_y = this.__gunShape.y + -30 * Math.sin(this.__gunAngle);
+
+
+        var p = new Projectile(this.__stage, this.__gunAngle, 0.5, this.__position[0] + this.gend_x-2, this.__position[1]-this.gend_y, this.__worldDimensions);
         return p;
-    },
+    }
 
 
 });

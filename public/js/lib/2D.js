@@ -54,7 +54,33 @@ function Intersection(status){if(arguments.length>0){this.init(status);}}
 Intersection.prototype.init=function(status){this.status=status;this.points=new Array();};
 Intersection.prototype.appendPoint=function(point){this.points.push(point);};
 Intersection.prototype.appendPoints=function(points){this.points=this.points.concat(points);};
-Intersection.intersectShapes=function(shape1,shape2){var ip1=shape1.getIntersectionParams();var ip2=shape2.getIntersectionParams();var result;if(ip1!=null&&ip2!=null){if(ip1.name=="Path"){result=Intersection.intersectPathShape(shape1,shape2);}else if(ip2.name=="Path"){result=Intersection.intersectPathShape(shape2,shape1);}else{var method;var params;if(ip1.name<ip2.name){method="intersect"+ip1.name+ip2.name;params=ip1.params.concat(ip2.params);}else{method="intersect"+ip2.name+ip1.name;params=ip2.params.concat(ip1.params);}if(!(method in Intersection))throw new Error("Intersection not available: "+method);result=Intersection[method].apply(null,params);}}else{result=new Intersection("No Intersection");}return result;};
+Intersection.intersectShapes = function (shape1, shape2) {
+    var ip1 = shape1.getIntersectionParams();
+    var ip2 = shape2.getIntersectionParams();
+    var result;
+    if (ip1 != null && ip2 != null) {
+        if (ip1.name == "Path") {
+            result = Intersection.intersectPathShape(shape1, shape2);
+        } else if (ip2.name == "Path") {
+            result = Intersection.intersectPathShape(shape2, shape1);
+        } else {
+            var method;
+            var params;
+            if (ip1.name < ip2.name) {
+                method = "intersect" + ip1.name + ip2.name;
+                params = ip1.params.concat(ip2.params);
+            } else {
+                method = "intersect" + ip2.name + ip1.name;
+                params = ip2.params.concat(ip1.params);
+            }
+            if (!(method in Intersection))throw new Error("Intersection not available: " + method);
+            result = Intersection[method].apply(null, params);
+        }
+    } else {
+        result = new Intersection("No Intersection");
+    }
+    return result;
+};
 Intersection.intersectPathShape=function(path,shape){return path.intersectShape(shape);};
 Intersection.intersectBezier2Bezier2=function(a1,a2,a3,b1,b2,b3){var a,b;var c12,c11,c10;var c22,c21,c20;var TOLERANCE=1e-4;var result=new Intersection("No Intersection");a=a2.multiply(-2);c12=a1.add(a.add(a3));a=a1.multiply(-2);b=a2.multiply(2);c11=a.add(b);c10=new Point2D(a1.x,a1.y);a=b2.multiply(-2);c22=b1.add(a.add(b3));a=b1.multiply(-2);b=b2.multiply(2);c21=a.add(b);c20=new Point2D(b1.x,b1.y);var a=c12.x*c11.y-c11.x*c12.y;var b=c22.x*c11.y-c11.x*c22.y;var c=c21.x*c11.y-c11.x*c21.y;var d=c11.x*(c10.y-c20.y)+c11.y*(-c10.x+c20.x);var e=c22.x*c12.y-c12.x*c22.y;var f=c21.x*c12.y-c12.x*c21.y;var g=c12.x*(c10.y-c20.y)+c12.y*(-c10.x+c20.x);var poly=new Polynomial(-e*e,-2*e*f,a*b-f*f-2*e*g,a*c-2*f*g,a*d-g*g);var roots=poly.getRoots();for(var i=0;i<roots.length;i++){var s=roots[i];if(0<=s&&s<=1){var xRoots=new Polynomial(-c12.x,-c11.x,-c10.x+c20.x+s*c21.x+s*s*c22.x).getRoots();var yRoots=new Polynomial(-c12.y,-c11.y,-c10.y+c20.y+s*c21.y+s*s*c22.y).getRoots();if(xRoots.length>0&&yRoots.length>0){checkRoots:for(var j=0;j<xRoots.length;j++){var xRoot=xRoots[j];if(0<=xRoot&&xRoot<=1){for(var k=0;k<yRoots.length;k++){if(Math.abs(xRoot-yRoots[k])<TOLERANCE){result.points.push(c22.multiply(s*s).add(c21.multiply(s).add(c20)));break checkRoots;}}}}}}}return result;};
 Intersection.intersectBezier2Bezier3=function(a1,a2,a3,b1,b2,b3,b4){var a,b,c,d;var c12,c11,c10;var c23,c22,c21,c20;var result=new Intersection("No Intersection");a=a2.multiply(-2);c12=a1.add(a.add(a3));a=a1.multiply(-2);b=a2.multiply(2);c11=a.add(b);c10=new Point2D(a1.x,a1.y);a=b1.multiply(-1);b=b2.multiply(3);c=b3.multiply(-3);d=a.add(b.add(c.add(b4)));c23=new Vector2D(d.x,d.y);a=b1.multiply(3);b=b2.multiply(-6);c=b3.multiply(3);d=a.add(b.add(c));c22=new Vector2D(d.x,d.y);a=b1.multiply(-3);b=b2.multiply(3);c=a.add(b);c21=new Vector2D(c.x,c.y);c20=new Vector2D(b1.x,b1.y);var c10x2=c10.x*c10.x;var c10y2=c10.y*c10.y;var c11x2=c11.x*c11.x;var c11y2=c11.y*c11.y;var c12x2=c12.x*c12.x;var c12y2=c12.y*c12.y;var c20x2=c20.x*c20.x;var c20y2=c20.y*c20.y;var c21x2=c21.x*c21.x;var c21y2=c21.y*c21.y;var c22x2=c22.x*c22.x;var c22y2=c22.y*c22.y;var c23x2=c23.x*c23.x;var c23y2=c23.y*c23.y;var poly=new Polynomial(-2*c12.x*c12.y*c23.x*c23.y+c12x2*c23y2+c12y2*c23x2,-2*c12.x*c12.y*c22.x*c23.y-2*c12.x*c12.y*c22.y*c23.x+2*c12y2*c22.x*c23.x+2*c12x2*c22.y*c23.y,-2*c12.x*c21.x*c12.y*c23.y-2*c12.x*c12.y*c21.y*c23.x-2*c12.x*c12.y*c22.x*c22.y+2*c21.x*c12y2*c23.x+c12y2*c22x2+c12x2*(2*c21.y*c23.y+c22y2),2*c10.x*c12.x*c12.y*c23.y+2*c10.y*c12.x*c12.y*c23.x+c11.x*c11.y*c12.x*c23.y+c11.x*c11.y*c12.y*c23.x-2*c20.x*c12.x*c12.y*c23.y-2*c12.x*c20.y*c12.y*c23.x-2*c12.x*c21.x*c12.y*c22.y-2*c12.x*c12.y*c21.y*c22.x-2*c10.x*c12y2*c23.x-2*c10.y*c12x2*c23.y+2*c20.x*c12y2*c23.x+2*c21.x*c12y2*c22.x-c11y2*c12.x*c23.x-c11x2*c12.y*c23.y+c12x2*(2*c20.y*c23.y+2*c21.y*c22.y),2*c10.x*c12.x*c12.y*c22.y+2*c10.y*c12.x*c12.y*c22.x+c11.x*c11.y*c12.x*c22.y+c11.x*c11.y*c12.y*c22.x-2*c20.x*c12.x*c12.y*c22.y-2*c12.x*c20.y*c12.y*c22.x-2*c12.x*c21.x*c12.y*c21.y-2*c10.x*c12y2*c22.x-2*c10.y*c12x2*c22.y+2*c20.x*c12y2*c22.x-c11y2*c12.x*c22.x-c11x2*c12.y*c22.y+c21x2*c12y2+c12x2*(2*c20.y*c22.y+c21y2),2*c10.x*c12.x*c12.y*c21.y+2*c10.y*c12.x*c21.x*c12.y+c11.x*c11.y*c12.x*c21.y+c11.x*c11.y*c21.x*c12.y-2*c20.x*c12.x*c12.y*c21.y-2*c12.x*c20.y*c21.x*c12.y-2*c10.x*c21.x*c12y2-2*c10.y*c12x2*c21.y+2*c20.x*c21.x*c12y2-c11y2*c12.x*c21.x-c11x2*c12.y*c21.y+2*c12x2*c20.y*c21.y,-2*c10.x*c10.y*c12.x*c12.y-c10.x*c11.x*c11.y*c12.y-c10.y*c11.x*c11.y*c12.x+2*c10.x*c12.x*c20.y*c12.y+2*c10.y*c20.x*c12.x*c12.y+c11.x*c20.x*c11.y*c12.y+c11.x*c11.y*c12.x*c20.y-2*c20.x*c12.x*c20.y*c12.y-2*c10.x*c20.x*c12y2+c10.x*c11y2*c12.x+c10.y*c11x2*c12.y-2*c10.y*c12x2*c20.y-c20.x*c11y2*c12.x-c11x2*c20.y*c12.y+c10x2*c12y2+c10y2*c12x2+c20x2*c12y2+c12x2*c20y2);var roots=poly.getRootsInInterval(0,1);for(var i=0;i<roots.length;i++){var s=roots[i];var xRoots=new Polynomial(c12.x,c11.x,c10.x-c20.x-s*c21.x-s*s*c22.x-s*s*s*c23.x).getRoots();var yRoots=new Polynomial(c12.y,c11.y,c10.y-c20.y-s*c21.y-s*s*c22.y-s*s*s*c23.y).getRoots();if(xRoots.length>0&&yRoots.length>0){var TOLERANCE=1e-4;checkRoots:for(var j=0;j<xRoots.length;j++){var xRoot=xRoots[j];if(0<=xRoot&&xRoot<=1){for(var k=0;k<yRoots.length;k++){if(Math.abs(xRoot-yRoots[k])<TOLERANCE){result.points.push(c23.multiply(s*s*s).add(c22.multiply(s*s).add(c21.multiply(s).add(c20))));break checkRoots;}}}}}}if(result.points.length>0)result.status="Intersection";return result;};
@@ -71,7 +97,34 @@ Intersection.intersectBezier3Polygon=function(p1,p2,p3,p4,points){var result=new
 Intersection.intersectBezier3Rectangle=function(p1,p2,p3,p4,r1,r2){var min=r1.min(r2);var max=r1.max(r2);var topRight=new Point2D(max.x,min.y);var bottomLeft=new Point2D(min.x,max.y);var inter1=Intersection.intersectBezier3Line(p1,p2,p3,p4,min,topRight);var inter2=Intersection.intersectBezier3Line(p1,p2,p3,p4,topRight,max);var inter3=Intersection.intersectBezier3Line(p1,p2,p3,p4,max,bottomLeft);var inter4=Intersection.intersectBezier3Line(p1,p2,p3,p4,bottomLeft,min);var result=new Intersection("No Intersection");result.appendPoints(inter1.points);result.appendPoints(inter2.points);result.appendPoints(inter3.points);result.appendPoints(inter4.points);if(result.points.length>0)result.status="Intersection";return result;};
 Intersection.intersectCircleCircle=function(c1,r1,c2,r2){var result;var r_max=r1+r2;var r_min=Math.abs(r1-r2);var c_dist=c1.distanceFrom(c2);if(c_dist>r_max){result=new Intersection("Outside");}else if(c_dist<r_min){result=new Intersection("Inside");}else{result=new Intersection("Intersection");var a=(r1*r1-r2*r2+c_dist*c_dist)/(2*c_dist);var h=Math.sqrt(r1*r1-a*a);var p=c1.lerp(c2,a/c_dist);var b=h/c_dist;result.points.push(new Point2D(p.x-b*(c2.y-c1.y),p.y+b*(c2.x-c1.x)));result.points.push(new Point2D(p.x+b*(c2.y-c1.y),p.y-b*(c2.x-c1.x)));}return result;};
 Intersection.intersectCircleEllipse=function(cc,r,ec,rx,ry){return Intersection.intersectEllipseEllipse(cc,r,r,ec,rx,ry);};
-Intersection.intersectCircleLine=function(c,r,a1,a2){var result;var a=(a2.x-a1.x)*(a2.x-a1.x)+(a2.y-a1.y)*(a2.y-a1.y);var b=2*((a2.x-a1.x)*(a1.x-c.x)+(a2.y-a1.y)*(a1.y-c.y));var cc=c.x*c.x+c.y*c.y+a1.x*a1.x+a1.y*a1.y-2*(c.x*a1.x+c.y*a1.y)-r*r;var deter=b*b-4*a*cc;if(deter<0){result=new Intersection("Outside");}else if(deter==0){result=new Intersection("Tangent");}else{var e=Math.sqrt(deter);var u1=(-b+e)/(2*a);var u2=(-b-e)/(2*a);if((u1<0||u1>1)&&(u2<0||u2>1)){if((u1<0&&u2<0)||(u1>1&&u2>1)){result=new Intersection("Outside");}else{result=new Intersection("Inside");}}else{result=new Intersection("Intersection");if(0<=u1&&u1<=1)result.points.push(a1.lerp(a2,u1));if(0<=u2&&u2<=1)result.points.push(a1.lerp(a2,u2));}}return result;};
+Intersection.intersectCircleLine = function (c, r, a1, a2) {
+    var result;
+    var a = (a2.x - a1.x) * (a2.x - a1.x) + (a2.y - a1.y) * (a2.y - a1.y);
+    var b = 2 * ((a2.x - a1.x) * (a1.x - c.x) + (a2.y - a1.y) * (a1.y - c.y));
+    var cc = c.x * c.x + c.y * c.y + a1.x * a1.x + a1.y * a1.y - 2 * (c.x * a1.x + c.y * a1.y) - r * r;
+    var deter = b * b - 4 * a * cc;
+    if (deter < 0) {
+        result = new Intersection("Outside");
+    } else if (deter == 0) {
+        result = new Intersection("Tangent");
+    } else {
+        var e = Math.sqrt(deter);
+        var u1 = (-b + e) / (2 * a);
+        var u2 = (-b - e) / (2 * a);
+        if ((u1 < 0 || u1 > 1) && (u2 < 0 || u2 > 1)) {
+            if ((u1 < 0 && u2 < 0) || (u1 > 1 && u2 > 1)) {
+                result = new Intersection("Outside");
+            } else {
+                result = new Intersection("Inside");
+            }
+        } else {
+            result = new Intersection("Intersection");
+            if (0 <= u1 && u1 <= 1)result.points.push(a1.lerp(a2, u1));
+            if (0 <= u2 && u2 <= 1)result.points.push(a1.lerp(a2, u2));
+        }
+    }
+    return result;
+};
 Intersection.intersectCirclePolygon=function(c,r,points){var result=new Intersection("No Intersection");var length=points.length;var inter;for(var i=0;i<length;i++){var a1=points[i];var a2=points[(i+1)%length];inter=Intersection.intersectCircleLine(c,r,a1,a2);result.appendPoints(inter.points);}if(result.points.length>0)result.status="Intersection";else result.status=inter.status;return result;};
 Intersection.intersectCircleRectangle=function(c,r,r1,r2){var min=r1.min(r2);var max=r1.max(r2);var topRight=new Point2D(max.x,min.y);var bottomLeft=new Point2D(min.x,max.y);var inter1=Intersection.intersectCircleLine(c,r,min,topRight);var inter2=Intersection.intersectCircleLine(c,r,topRight,max);var inter3=Intersection.intersectCircleLine(c,r,max,bottomLeft);var inter4=Intersection.intersectCircleLine(c,r,bottomLeft,min);var result=new Intersection("No Intersection");result.appendPoints(inter1.points);result.appendPoints(inter2.points);result.appendPoints(inter3.points);result.appendPoints(inter4.points);if(result.points.length>0)result.status="Intersection";else result.status=inter1.status;return result;};
 Intersection.intersectEllipseEllipse=function(c1,rx1,ry1,c2,rx2,ry2){var a=[ry1*ry1,0,rx1*rx1,-2*ry1*ry1*c1.x,-2*rx1*rx1*c1.y,ry1*ry1*c1.x*c1.x+rx1*rx1*c1.y*c1.y-rx1*rx1*ry1*ry1];var b=[ry2*ry2,0,rx2*rx2,-2*ry2*ry2*c2.x,-2*rx2*rx2*c2.y,ry2*ry2*c2.x*c2.x+rx2*rx2*c2.y*c2.y-rx2*rx2*ry2*ry2];var yPoly=Intersection.bezout(a,b);var yRoots=yPoly.getRoots();var epsilon=1e-3;var norm0=(a[0]*a[0]+2*a[1]*a[1]+a[2]*a[2])*epsilon;var norm1=(b[0]*b[0]+2*b[1]*b[1]+b[2]*b[2])*epsilon;var result=new Intersection("No Intersection");for(var y=0;y<yRoots.length;y++){var xPoly=new Polynomial(a[0],a[3]+yRoots[y]*a[1],a[5]+yRoots[y]*(a[4]+yRoots[y]*a[2]));var xRoots=xPoly.getRoots();for(var x=0;x<xRoots.length;x++){var test=(a[0]*xRoots[x]+a[1]*yRoots[y]+a[3])*xRoots[x]+(a[2]*yRoots[y]+a[4])*yRoots[y]+a[5];if(Math.abs(test)<norm0){test=(b[0]*xRoots[x]+b[1]*yRoots[y]+b[3])*xRoots[x]+(b[2]*yRoots[y]+b[4])*yRoots[y]+b[5];if(Math.abs(test)<norm1){result.appendPoint(new Point2D(xRoots[x],yRoots[y]));}}}}if(result.points.length>0)result.status="Intersection";return result;};
@@ -177,7 +230,9 @@ Circle.prototype.registerHandles=function(){mouser.register(this.center);mouser.
 Circle.prototype.unregisterHandles=function(){mouser.unregister(this.center);mouser.unregister(this.radius);};
 Circle.prototype.selectHandles=function(select){this.center.select(select);this.radius.select(select);};
 Circle.prototype.showHandles=function(state){this.center.show(state);this.radius.show(state);};
-Circle.prototype.getIntersectionParams=function(){return new IntersectionParams("Circle",[this.center.point,parseFloat(this.svgNode.getAttributeNS(null,"r"))]);};
+Circle.prototype.getIntersectionParams = function () {
+    return new IntersectionParams("Circle", [this.center.point, parseFloat(this.svgNode.getAttributeNS(null, "r"))]);
+};
 Ellipse.prototype=new Shape();
 Ellipse.prototype.constructor=Ellipse;
 Ellipse.superclass=Shape.prototype;
@@ -253,7 +308,15 @@ Path.prototype.showHandles=function(state){for(var i=0;i<this.segments.length;i+
 Path.prototype.appendPathSegment=function(segment){segment.previous=this.segments[this.segments.length-1];this.segments.push(segment);};
 Path.prototype.parseData=function(d){var tokens=this.tokenize(d);var index=0;var token=tokens[index];var mode="BOD";this.segments=new Array();while(!token.typeis(Path.EOD)){var param_length;var params=new Array();if(mode=="BOD"){if(token.text=="M"||token.text=="m"){index++;param_length=Path.PARAMS[token.text].length;mode=token.text;}else{throw new Error("Path data must begin with a moveto command");}}else{if(token.typeis(Path.NUMBER)){param_length=Path.PARAMS[mode].length;}else{index++;param_length=Path.PARAMS[token.text].length;mode=token.text;}}if((index+param_length)<tokens.length){for(var i=index;i<index+param_length;i++){var number=tokens[i];if(number.typeis(Path.NUMBER))params[params.length]=number.text;else throw new Error("Parameter type is not a number: "+mode+","+number.text);}var segment;var length=this.segments.length;var previous=(length==0)?null:this.segments[length-1];switch(mode){case"A":segment=new AbsoluteArcPath(params,this,previous);break;case"C":segment=new AbsoluteCurveto3(params,this,previous);break;case"c":segment=new RelativeCurveto3(params,this,previous);break;case"H":segment=new AbsoluteHLineto(params,this,previous);break;case"L":segment=new AbsoluteLineto(params,this,previous);break;case"l":segment=new RelativeLineto(params,this,previous);break;case"M":segment=new AbsoluteMoveto(params,this,previous);break;case"m":segment=new RelativeMoveto(params,this,previous);break;case"Q":segment=new AbsoluteCurveto2(params,this,previous);break;case"q":segment=new RelativeCurveto2(params,this,previous);break;case"S":segment=new AbsoluteSmoothCurveto3(params,this,previous);break;case"s":segment=new RelativeSmoothCurveto3(params,this,previous);break;case"T":segment=new AbsoluteSmoothCurveto2(params,this,previous);break;case"t":segment=new RelativeSmoothCurveto2(params,this,previous);break;case"Z":segment=new RelativeClosePath(params,this,previous);break;case"z":segment=new RelativeClosePath(params,this,previous);break;default:throw new Error("Unsupported segment type: "+mode);};this.segments.push(segment);index+=param_length;token=tokens[index];if(mode=="M")mode="L";if(mode=="m")mode="l";}else{throw new Error("Path data ended before all parameters were found");}}}
 Path.prototype.tokenize=function(d){var tokens=new Array();while(d!=""){if(d.match(/^([ \t\r\n,]+)/)){d=d.substr(RegExp.$1.length);}else if(d.match(/^([aAcChHlLmMqQsStTvVzZ])/)){tokens[tokens.length]=new Token(Path.COMMAND,RegExp.$1);d=d.substr(RegExp.$1.length);}else if(d.match(/^(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)/)){tokens[tokens.length]=new Token(Path.NUMBER,parseFloat(RegExp.$1));d=d.substr(RegExp.$1.length);}else{throw new Error("Unrecognized segment command: "+d);}}tokens[tokens.length]=new Token(Path.EOD,null);return tokens;}
-Path.prototype.intersectShape=function(shape){var result=new Intersection("No Intersection");for(var i=0;i<this.segments.length;i++){var inter=Intersection.intersectShapes(this.segments[i],shape);result.appendPoints(inter.points);}if(result.points.length>0)result.status="Intersection";return result;};
+Path.prototype.intersectShape = function (shape) {
+    var result = new Intersection("No Intersection");
+    for (var i = 0; i < this.segments.length; i++) {
+        var inter = Intersection.intersectShapes(this.segments[i], shape);
+        result.appendPoints(inter.points);
+    }
+    if (result.points.length > 0)result.status = "Intersection";
+    return result;
+};
 Path.prototype.getIntersectionParams=function(){return new IntersectionParams("Path",[]);};
 function AbsolutePathSegment(command,params,owner,previous){if(arguments.length>0)this.init(command,params,owner,previous);};
 AbsolutePathSegment.prototype.init=function(command,params,owner,previous){this.command=command;this.owner=owner;this.previous=previous;this.handles=new Array();var index=0;while(index<params.length){var handle=new Handle(params[index],params[index+1],owner);this.handles.push(handle);index+=2;}};
