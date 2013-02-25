@@ -11,6 +11,7 @@ var Ground = dejavu.Class.declare({
     __stage: null,
     __worldDimensions: null,
     __platformWidth: 3,
+    __body: null,
 
     initialize: function(divCount, dimensions, platforms, stage) {
         this.__stage = stage;
@@ -27,6 +28,43 @@ var Ground = dejavu.Class.declare({
         }
         this.createPlatforms(platforms);
         console.log("line now has %d segments", this.segments.length);
+
+
+        var verts = [];
+
+        var segmentWidth = this.__worldDimensions.x/this.segments.length;
+
+        for (var i = 0; i < this.segments.length; i++) {
+             var verty = [];
+
+            var segment = this.segments[i];
+
+
+                verty.push(i*segmentWidth);
+                verty.push(segment[0]);
+
+
+            verty.push((i+1)*segmentWidth);
+            verty.push(segment[1]);
+
+            verty.push((i+1)*segmentWidth);
+            verty.push(0);
+
+            verty.push(i*segmentWidth);
+            verty.push(0);
+
+            verts.push(verty);
+//            console.dir(verty);
+        }
+//        console.dir(verts);
+
+        for (var vi = 0; vi < verts.length; vi++) {
+            var shp = new cp.PolyShape(physSpace.staticBody, verts[vi], v(0,0));
+            shp.setCollisionType(6127);
+            physSpace.addShape(shp);
+
+        }
+
     },
 
     divide: function() {
@@ -107,6 +145,11 @@ var Ground = dejavu.Class.declare({
         this.__bodyShape.graphics.endStroke();
         this.__stage.addChild(this.__bodyShape);
         this.__stage.update();
+    },
+
+
+    checkProjectileHit: function(x, y) {
 
     }
+
 });

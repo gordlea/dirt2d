@@ -17,6 +17,11 @@ var v = cp.v;
 var physSpace = new cp.Space();
 physSpace.iterations = 60;
 physSpace.gravity = v(0, -0.0002);
+
+physSpace.addCollisionHandler(6127, 224, function(a, b ,c) {
+    console.log('collision');
+});
+
 //physSpace.sleepTimeThreshold = 0.5;
 //physSpace.collisionSlop = 0.5;
 //physSpace.sleepTimeThreshold = 0.5;
@@ -130,6 +135,8 @@ var Dirt2d = dejavu.Class.declare({
         }
 
         this.__stage.update();
+
+
      },
 
     handleAngleSliderChange: function(event, ui) {

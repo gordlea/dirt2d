@@ -27,7 +27,10 @@ var Projectile = dejavu.Class.declare({
         this.__body = physSpace.addBody(new cp.Body(1, cp.momentForCircle(1, 0, 5, cp.v(0,0))));
         this.__body.setPos(v(this.x, this.y));
         this.__body.setAngle(this._initialAngle);
-        this.__physicsShape = physSpace.addShape(new cp.CircleShape(this.__body, 5, v(0,0)));
+
+        var shp = new cp.CircleShape(this.__body, 5, v(0,0));
+        shp.setCollisionType(224);
+        this.__physicsShape = physSpace.addShape(shp);
 
         var ix = force*Math.cos(this._initialAngle);
         var iy = force*Math.sin(this._initialAngle);

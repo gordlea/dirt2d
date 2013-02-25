@@ -126,6 +126,4 @@ var Unit = dejavu.Class.declare({
         var p = new Projectile(this.__stage, this.__gunAngle, this.__gunPower, this.__position[0] + this.gend_x-2, this.__position[1]-this.gend_y, this.__worldDimensions);
         return p;
     }
-
-
 });
