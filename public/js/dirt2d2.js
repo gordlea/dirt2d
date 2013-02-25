@@ -20,6 +20,7 @@ physSpace.gravity = v(0, -0.0002);
 
 physSpace.addCollisionHandler(6127, 224, function(a, b ,c) {
     console.log('collision');
+
 });
 
 //physSpace.sleepTimeThreshold = 0.5;

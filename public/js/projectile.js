@@ -14,6 +14,7 @@ var Projectile = dejavu.Class.declare({
     __bodyShape: null,
     __worldDimensions: null,
     dead: null,
+    id: null,
     initialize: function(stage, angle, force, x, y, dimensions) {
         this.__worldDimensions = dimensions;
 
@@ -36,7 +37,8 @@ var Projectile = dejavu.Class.declare({
         var iy = force*Math.sin(this._initialAngle);
 
         this.__body.applyImpulse(v(ix, iy), this.__body.local2World(cp.v(0,0)));
-
+        this.id = UUIDjs.create().hex;
+         this.__body.projectileId = this.id;
         this.dead = false;
     },
 
