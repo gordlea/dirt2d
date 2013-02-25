@@ -12,6 +12,8 @@ var Ground = dejavu.Class.declare({
     __worldDimensions: null,
     __platformWidth: 3,
     __body: null,
+    shapes: null,
+    needsUpdate: null,
 
     initialize: function(divCount, dimensions, platforms, stage) {
         this.__stage = stage;
@@ -29,19 +31,36 @@ var Ground = dejavu.Class.declare({
         this.createPlatforms(platforms);
         console.log("line now has %d segments", this.segments.length);
 
+          this.needsUpdate = false;
+
+        this.updateGroundPhysics();
+    },
+
+    updateGroundPhysics: function() {
+
+        if (this.shapes === null) {
+            this.shapes = [];
+        } else {
+            for (var si = 0; si < this.shapes.length; si++) {
+                var sha = this.shapes[si];
+                physSpace.removeShape(sha);
+
+            }
+            this.shapes = [];
+        }
 
         var verts = [];
 
         var segmentWidth = this.__worldDimensions.x/this.segments.length;
 
         for (var i = 0; i < this.segments.length; i++) {
-             var verty = [];
+            var verty = [];
 
             var segment = this.segments[i];
 
 
-                verty.push(i*segmentWidth);
-                verty.push(segment[0]);
+            verty.push(i*segmentWidth);
+            verty.push(segment[0]);
 
 
             verty.push((i+1)*segmentWidth);
@@ -58,13 +77,16 @@ var Ground = dejavu.Class.declare({
         }
 //        console.dir(verts);
 
+
+
+
         for (var vi = 0; vi < verts.length; vi++) {
             var shp = new cp.PolyShape(physSpace.staticBody, verts[vi], v(0,0));
             shp.setCollisionType(6127);
             physSpace.addShape(shp);
+            this.shapes.push(shp);
 
         }
-
     },
 
     divide: function() {
@@ -148,8 +170,32 @@ var Ground = dejavu.Class.declare({
     },
 
 
-    checkProjectileHit: function(x, y) {
+    explosion: function(projectile) {
+        var ex = projectile.x;
+        var ey = projectile.y;
 
+
+        var segmentWidth = this.__worldDimensions.x/this.segments.length;
+        var segmentLeft = Math.floor((ex-60)/segmentWidth);
+        var segmentRight = Math.ceil((ex+60)/segmentWidth);
+        var segr = (segmentRight - segmentLeft)/2;
+        var r = segr*segmentWidth;
+
+
+        for (var i = segmentLeft; i < segmentRight; i++) {
+
+            var x = Math.abs(i-segr)*segmentWidth;
+            var y = r*Math.sin(Math.acos(x/r));
+
+            var s = this.segments[i];
+
+            s[0] -= y;
+            s[1] -= s[0];
+            this.segments[i] = s;
+        }
+
+
+         this.needsUpdate = true;
     }
 
 });

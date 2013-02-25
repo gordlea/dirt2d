@@ -107,6 +107,10 @@ var Dirt2d = dejavu.Class.declare({
             var pid = a.body_a.projectileId;
             var p = this.projectiles[pid];
             p.explode();
+
+            this.__ground.explosion(p);
+            this.__ground.draw(this.__worldScreenScale.x,this.__worldScreenScale.y);
+
         }.bind(this));
 
     },
@@ -139,6 +143,9 @@ var Dirt2d = dejavu.Class.declare({
             }
 
 
+            if (this.__ground.needsUpdate) {
+                this.__ground.updateGroundPhysics();
+            }
 
         }
 

@@ -112,6 +112,10 @@ var Projectile = dejavu.Class.declare({
 
                 this.__bodyShape.x = this.__body.p.x*this.scaleX;
                 this.__bodyShape.y = this.__worldDimensions.y*this.scaleY - this.__body.p.y*this.scaleY;
+
+                this.x = this.__body.p.x;
+                this.y = this.__body.p.y;
+
                 //clean up if it goes out of bounds
                 if (this.__bodyShape.x < -1000 || this.__bodyShape.x > 2000 || this.__bodyShape.y > 1440) {
                         this.dead = true;
