@@ -13,11 +13,15 @@ var Projectile = dejavu.Class.declare({
     __physicsShape: null,
     __bodyShape: null,
     __worldDimensions: null,
+    exploding: null,
     dead: null,
     id: null,
+    color: null,
+    explosionFrames: null,
+    physicsStopped: null,
     initialize: function(stage, angle, force, x, y, dimensions) {
         this.__worldDimensions = dimensions;
-
+        this.color = "yellow";
         this.__stage = stage;
         this._initialAngle = angle;
         this._initialForce = force;
@@ -40,6 +44,8 @@ var Projectile = dejavu.Class.declare({
         this.id = UUIDjs.create().hex;
          this.__body.projectileId = this.id;
         this.dead = false;
+        this.exploding = false;
+        this.physicsStopped = false;
     },
 
     updateScale: function (xs, ys) {
@@ -66,7 +72,8 @@ var Projectile = dejavu.Class.declare({
         this.__bodyShape.y = this.__worldDimensions.y*this.scaleY - this.y*this.scaleY;
         this.__bodyShape.graphics.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*this.scaleX);
         this.__bodyShape.graphics.beginFill(this.color);
-        this.__bodyShape.graphics.rect(5, 5, -5, -5);
+//        this.__bodyShape.graphics.rect(5, 5, -5, -5);
+        this.__bodyShape.graphics.drawCircle(0,0,5)
         this.__bodyShape.graphics.endStroke();
         this.__stage.addChild(this.__bodyShape);
         this.__stage.update();
@@ -74,17 +81,59 @@ var Projectile = dejavu.Class.declare({
         this.drawn = true;
     },
 
-    tick: function() {
-//         console.log("tick");
-        if (this.drawn) {
+    die: function() {
+        this.__stage.removeChild(this.__bodyShape);
+        if (!this.physicsStopped) {
+        physSpace.removeBody(this.__body);
+        physSpace.removeShape(this.__physicsShape);
+        this.physicsStopped = true;
+        }
+    },
 
-            this.__bodyShape.x = this.__body.p.x*this.scaleX;
-        this.__bodyShape.y = this.__worldDimensions.y*this.scaleY - this.__body.p.y*this.scaleY;
-//            console.log("this.__bodyShape(%d,%d)", this.__bodyShape.x, this.__bodyShape.y)
-            this.__stage.update();
+    stopPhysics: function() {
+        if (!this.physicsStopped) {
+            physSpace.removeBody(this.__body);
+            physSpace.removeShape(this.__physicsShape);
+            this.physicsStopped = true;
+        }
+    },
+
+    explode: function() {
+        if (!this.exploding) {
+
+        this.exploding = true;
+        this.explosionFrames = 0;
+        }
+    },
+
+    tick: function() {
+        if (this.drawn) {
+            if (this.exploding !== true) {
+
+                this.__bodyShape.x = this.__body.p.x*this.scaleX;
+                this.__bodyShape.y = this.__worldDimensions.y*this.scaleY - this.__body.p.y*this.scaleY;
+                //clean up if it goes out of bounds
                 if (this.__bodyShape.x < -1000 || this.__bodyShape.x > 2000 || this.__bodyShape.y > 1440) {
-                    this.dead = true;
+                        this.dead = true;
                 }
+            } else {
+                if (this.explosionFrames >= 60) {
+                    this.dead = true;
+                    this.exploding = false;
+                } else {
+                    var g = this.__bodyShape.graphics;
+                    g.clear();
+                    g.beginStroke(Graphics.getRGB(0,0,0)).setStrokeStyle(3*this.scaleX);
+                    g.beginFill(this.color);
+                    g.drawCircle(0,0,this.explosionFrames);
+                    g.endFill();
+                    g.endStroke();
+
+                    this.explosionFrames++;
+                }
+            }
+            this.__stage.update();
+
         }
 
     }

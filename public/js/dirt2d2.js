@@ -18,14 +18,11 @@ var physSpace = new cp.Space();
 physSpace.iterations = 60;
 physSpace.gravity = v(0, -0.0002);
 
-physSpace.addCollisionHandler(6127, 224, function(a, b ,c) {
-    console.log('collision');
 
-});
 
 //physSpace.sleepTimeThreshold = 0.5;
-//physSpace.collisionSlop = 0.5;
-//physSpace.sleepTimeThreshold = 0.5;
+physSpace.collisionSlop = 0.5;
+physSpace.sleepTimeThreshold = 0.5;
 
 var Dirt2d = dejavu.Class.declare({
     $name: 'Dirt2d',
@@ -43,7 +40,7 @@ var Dirt2d = dejavu.Class.declare({
     __canvas: null,
     __stage: null,
     units: [],
-    projectiles: [],
+    projectiles: {},
 
 
     initialize: function() {
@@ -100,11 +97,17 @@ var Dirt2d = dejavu.Class.declare({
             console.log("fire");
             for (var i = 0; i < 1; i++) {
                 var p  = this.units[i].fire();
-                this.projectiles.push(p);
+                this.projectiles[p.id] = p;
             }
         }.bind(this));
         createjs.Ticker.setFPS(60);
         createjs.Ticker.addEventListener("tick", this.handleTick.bind(this));
+        physSpace.addCollisionHandler(6127, 224, function(a, b) {
+//            console.log('collision');
+            var pid = a.body_a.projectileId;
+            var p = this.projectiles[pid];
+            p.explode();
+        }.bind(this));
 
     },
 
@@ -112,28 +115,45 @@ var Dirt2d = dejavu.Class.declare({
                      var deadProjectiles = [];
         var interval = createjs.Ticker.getInterval();
         physSpace.step(interval);
-        for (var i = 0; i < this.projectiles.length; i++) {
+//        for (var i = 0; i < this.projectiles.length; i++) {
+        for (var pid in this.projectiles) {
 //            console.log("drawing projectile");
-            var p  = this.projectiles[i];
+            var p  = this.projectiles[pid];
             p.updateScale(this.__worldScreenScale.x,this.__worldScreenScale.y)
 
             if (!p.drawn) {
                 p.draw();
             }
-
-            p.tick();
+            if (p.exploding === true) {
+                p.stopPhysics();
+            }
 
             if (p.dead === true) {
-                deadProjectiles.push(p);
+
+                    p.die();
+                    delete this.projectiles[pid];
+
+            } else {
+
+                p.tick();
             }
-        }
 
 
-        for (var dpi = deadProjectiles.length -1; dpi >= 0; dpi--) {
-            var dp = this.projectiles.splice(deadProjectiles[dpi], 1);
-            physSpace.removeBody(dp);
 
         }
+
+
+//        for (var dpi = 0; dpi < deadProjectiles.length; dpi++) {
+////            var dp = this.projectiles.splice(deadProjectiles[dpi], 1);
+//            var dpid = deadProjectiles[dpi];
+//            var dp = this.projectiles[dpid];
+//
+//            physSpace.removeBody(dp);
+//            delete this.projectiles[dpid];
+//            dp = null;
+//
+//
+//        }
 
         this.__stage.update();
 
