@@ -171,31 +171,55 @@ var Ground = dejavu.Class.declare({
 
 
     explosion: function(projectile) {
-        var ex = projectile.x;
-        var ey = projectile.y;
+
+//        var segment5 = this.segments[5];
+//        segment5[0] -= 5;
+//        segment5[1] -= 5;
+//
+//                var segmentWidth = this.__worldDimensions.x/this.segments.length;
+
+//        projectile.x;
+//        var segx = Math.floor(projectile.x/segmentWidth);
+//        var r = 5*segmentWidth;
+//        var impact_y = (this.segments[segx][0] + this.segments[segx][1])/2;
+//
+//        for (var i = -5; i <=5; i++) {
+//            var seg = this.segments[segx + i];
+//            var y = Math.sqrt((r*r) - ((i*segmentWidth)*(i*segmentWidth)));
+//            seg[0] = impact_y - y;
+//            y = Math.sqrt((r*r) - (((i+1)*segmentWidth)*((i+1)*segmentWidth)));
+//            seg[1] = impact_y - y;
+//
+//
+//
+//        }
 
 
-        var segmentWidth = this.__worldDimensions.x/this.segments.length;
-        var segmentLeft = Math.floor((ex-60)/segmentWidth);
-        var segmentRight = Math.ceil((ex+60)/segmentWidth);
-        var segr = (segmentRight - segmentLeft)/2;
-        var r = segr*segmentWidth;
-
-
-        for (var i = segmentLeft; i < segmentRight; i++) {
-
-            var x = Math.abs(i-segr)*segmentWidth;
-            var y = r*Math.sin(Math.acos(x/r));
-
-            var s = this.segments[i];
-
-            s[0] -= y;
-            s[1] -= s[0];
-            this.segments[i] = s;
-        }
-
-
-         this.needsUpdate = true;
+//        var ex = projectile.x;
+//        var ey = projectile.y;
+//
+//
+//        var segmentWidth = this.__worldDimensions.x/this.segments.length;
+//        var segmentLeft = Math.floor((ex-60)/segmentWidth);
+//        var segmentRight = Math.ceil((ex+60)/segmentWidth);
+//        var segr = (segmentRight - segmentLeft)/2;
+//        var r = segr*segmentWidth;
+//
+//
+//        for (var i = segmentLeft; i < segmentRight; i++) {
+//
+//            var x = Math.abs(i-segr)*segmentWidth;
+//            var y = r*Math.sin(Math.acos(x/r));
+//
+//            var s = this.segments[i];
+//
+//            s[0] -= y;
+//            s[1] -= s[0];
+//            this.segments[i] = s;
+//        }
+//
+//
+//         this.needsUpdate = true;
     }
 
 });
