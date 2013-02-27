@@ -15,7 +15,7 @@ $(function() {
 });
 var v = cp.v;
 var physSpace = new cp.Space();
-physSpace.iterations = 60;
+physSpace.iterations = 10;
 physSpace.gravity = v(0, -0.0002);
 
 
@@ -41,6 +41,7 @@ var Dirt2d = dejavu.Class.declare({
     __stage: null,
     units: [],
     projectiles: {},
+    lastToFire: null,
 
 
     initialize: function() {
@@ -57,49 +58,50 @@ var Dirt2d = dejavu.Class.declare({
 
         this.handleWindowResize();
         $(window).resize(this.handleWindowResize.bind(this));
-        var spinner = $( "#angle_value" ).spinner({
-            min: 0,
-            max: 180,
-            step: 1,
-            value: 0,
-            spin: this.handleAngleSpinnerChange.bind(this),
-            change: this.handleAngleSpinnerChange.bind(this)
-        });
-
-        $( "#angle_slider" ).slider({
-            min: 0,
-            max: 180,
-            step: 1,
-            value: 0,
-            slide: this.handleAngleSliderChange.bind(this)
-        });
-
-        var powerSpinner = $( "#power_value" ).spinner({
-            min: 0,
-            max: 100,
-            step: 1,
-            value: 50,
-            spin: this.handlePowerSpinnerChange.bind(this),
-            change: this.handlePowerSpinnerChange.bind(this)
-        });
-
-        $( "#power_slider" ).slider({
-            min: 0,
-            max: 100,
-            step: 1,
-            value: 50,
-            slide: this.handlePowerSliderChange.bind(this)
-        });
-
-//        $( "#angle_value" ).spinner("value",0);
-
-        $("#fire_button").button().click(function (event) {
-            console.log("fire");
-            for (var i = 0; i < 1; i++) {
-                var p  = this.units[i].fire();
-                this.projectiles[p.id] = p;
-            }
-        }.bind(this));
+//        var spinner = $( "#angle_value" ).spinner({
+//            min: 0,
+//            max: 180,
+//            step: 1,
+//            value: 0,
+//            spin: this.handleAngleSpinnerChange.bind(this),
+//            change: this.handleAngleSpinnerChange.bind(this)
+//        });
+//
+//        $( "#angle_slider" ).slider({
+//            min: 0,
+//            max: 180,
+//            step: 1,
+//            value: 0,
+//            slide: this.handleAngleSliderChange.bind(this)
+//        });
+//
+//        var powerSpinner = $( "#power_value" ).spinner({
+//            min: 0,
+//            max: 100,
+//            step: 1,
+//            value: 50,
+//            spin: this.handlePowerSpinnerChange.bind(this),
+//            change: this.handlePowerSpinnerChange.bind(this)
+//        });
+//
+//        $( "#power_slider" ).slider({
+//            min: 0,
+//            max: 100,
+//            step: 1,
+//            value: 50,
+//            slide: this.handlePowerSliderChange.bind(this)
+//        });
+//
+////        $( "#angle_value" ).spinner("value",0);
+//
+//        $("#fire_button").button().click(function (event) {
+//            console.log("fire");
+//            this.fire();
+////            for (var i = 0; i < 1; i++) {
+////                var p  = this.units[i].fire();
+////                this.projectiles[p.id] = p;
+////            }
+//        }.bind(this));
         createjs.Ticker.setFPS(60);
         createjs.Ticker.addEventListener("tick", this.handleTick.bind(this));
         physSpace.addCollisionHandler(6127, 224, function(a, b) {
@@ -112,6 +114,62 @@ var Dirt2d = dejavu.Class.declare({
             this.__ground.draw(this.__worldScreenScale.x,this.__worldScreenScale.y);
 
         }.bind(this));
+        physSpace.addCollisionHandler(224, 224, function(a, b) {
+//            console.log('collision');
+            var pid = a.body_a.projectileId;
+            var p = this.projectiles[pid];
+            p.explode();
+
+//            this.__ground.explosion(p);
+//            this.__ground.draw(this.__worldScreenScale.x,this.__worldScreenScale.y);
+
+        }.bind(this));
+
+        this.lastToFire = 0;
+
+        window.setInterval(function() {
+            this.fire();
+        }.bind(this), 400);
+    },
+
+
+
+    fire: function() {
+        this.lastToFire++;
+        if (this.lastToFire >= this.units.length) {
+            this.lastToFire = 0;
+        }
+
+        var unit = this.units[this.lastToFire];
+        var pos = unit.getPosition();
+//        console.log(pos);
+
+        var angle = null;
+        if (pos[0] > this.__worldDimensions.x/2) {
+            angle = Dirt2d.getRandom(30, 80);
+        } else {
+            angle = Dirt2d.getRandom(100, 150);
+        }
+
+
+        unit.setGunPower(Dirt2d.getRandom(20,50));
+
+
+        unit.setGunAngleDegrees(angle);
+        var p1  = unit.fire();
+        this.projectiles[p1.id] = p1;
+
+//
+//        unit.setGunAngleDegrees(angle + 2);
+//        var p2  = unit.fire();
+//        this.projectiles[p2.id] = p2;
+//
+//        unit.setGunAngleDegrees(angle + 4);
+//        var p3  = unit.fire();
+//        this.projectiles[p3.id] = p3;
+
+
+
 
     },
 
@@ -228,7 +286,7 @@ var Dirt2d = dejavu.Class.declare({
         var controlsHeight = $('#controls').outerHeight();
 
         //use a 16:10 ratio ideally
-        var availableHeight = $(window).innerHeight() - controlsHeight - 5;
+        var availableHeight = $(window).innerHeight() - controlsHeight;//-5;
         var availableWidth =  $(window).width();
         var newHeight = availableHeight;
         var newWidth = availableWidth;

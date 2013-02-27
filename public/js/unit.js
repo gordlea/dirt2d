@@ -28,6 +28,10 @@ var Unit = dejavu.Class.declare({
         this.drawn = false;
     },
 
+    getPosition: function() {
+        return this.__position;
+    },
+
     updateScale: function (xs, ys) {
         this.scaleX = xs;
         this.scaleY = ys;

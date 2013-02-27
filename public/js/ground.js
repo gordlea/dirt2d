@@ -92,10 +92,18 @@ var Ground = dejavu.Class.declare({
     divide: function() {
         var newSegments = [];
 
+        var firstTime = this.segments.length === 1;
+        console.log(firstTime);
+
         for (var i = 0; i < this.segments.length; i++) {
 
 
-            var offset = Dirt2d.getRandom(this._minOffset, this._maxOffset);
+            var offset =  null;
+            if (firstTime) {
+                offset = Dirt2d.getRandom(this._minOffset, 0);
+            } else{
+                offset = Dirt2d.getRandom(this._minOffset, this._maxOffset);
+            }
 
 
             var seg = this.segments[i];
@@ -117,8 +125,10 @@ var Ground = dejavu.Class.declare({
     createPlatforms: function(number) {
         var segmentWidth = this.__worldDimensions.x/this.segments.length;
 
+        var steps = Math.floor(this.segments.length / 5);
+
         for (var i = 0; i < number; i++) {
-            var xCoord = Dirt2d.getRandom(this.__platformWidth, this.segments.length - this.__platformWidth);
+            var xCoord = steps*(i+1);//Dirt2d.getRandom(this.__platformWidth, this.segments.length - this.__platformWidth);
 
 
             var height = this.segments[xCoord][0];
