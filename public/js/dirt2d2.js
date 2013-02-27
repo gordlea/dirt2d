@@ -116,9 +116,9 @@ var Dirt2d = dejavu.Class.declare({
         }.bind(this));
         physSpace.addCollisionHandler(224, 224, function(a, b) {
 //            console.log('collision');
-            var pid = a.body_a.projectileId;
-            var p = this.projectiles[pid];
-            p.explode();
+
+            this.projectiles[a.body_a.projectileId].explode();
+            this.projectiles[a.body_b.projectileId].explode();
 
 //            this.__ground.explosion(p);
 //            this.__ground.draw(this.__worldScreenScale.x,this.__worldScreenScale.y);
