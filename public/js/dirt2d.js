@@ -8,267 +8,318 @@ var requestAnimationFrame = window.requestAnimationFrame
     return window.setTimeout(callback, 1000 / 60);
 };
 
+var ASPECT_RATIO = 1.6;
+
 $(function() {
     var d2d = new Dirt2d();
 });
+var v = cp.v;
+var physSpace = new cp.Space();
+physSpace.iterations = 10;
+physSpace.gravity = v(0, -0.0002);
+
+
+
+//physSpace.sleepTimeThreshold = 0.5;
+physSpace.collisionSlop = 0.5;
+physSpace.sleepTimeThreshold = 0.5;
 
 var Dirt2d = dejavu.Class.declare({
     $name: 'Dirt2d',
+    __playerCount: 4,
+    __worldDimensions: {
+        x: 1440,
+        y: 900
+    },
+    __worldScreenScale: {
+        x: 0,
+        y: 0
+    },
     __ground: null,
     __space: null,
-    __groundOffset: 100,
-    __ctx: null,
-    __scale_x: null,
-    __scale_y: null,
-    __unitCount: 4,
+    __canvas: null,
+    __stage: null,
     units: [],
+    projectiles: {},
+    lastToFire: null,
+
 
     initialize: function() {
 
 
-        this.__ground = new Ground(8, this.__groundOffset, this.__unitCount);
+        this.__space = physSpace;
 
-        this.__space = new cp.Space();
-        this.__space.iterations = 60;
-        this.__space.gravity = cp.v(0, -200);
-        this.__space.sleepTimeThreshold = 0.5;
-        this.__space.collisionSlop = 0.5;
-        this.__space.sleepTimeThreshold = 0.5;
-        var canvas = document.getElementById('canvas');
-        var ctx = canvas.getContext('2d');
-        this.__ctx = ctx;
+        this.__canvas = document.getElementById('canvas');
+        this.__stage = new createjs.Stage(this.__canvas);
 
-        this.handleWindowResize();
         this.createTerrain();
+
         this.createUnits();
+
         this.handleWindowResize();
         $(window).resize(this.handleWindowResize.bind(this));
+//        var spinner = $( "#angle_value" ).spinner({
+//            min: 0,
+//            max: 180,
+//            step: 1,
+//            value: 0,
+//            spin: this.handleAngleSpinnerChange.bind(this),
+//            change: this.handleAngleSpinnerChange.bind(this)
+//        });
+//
+//        $( "#angle_slider" ).slider({
+//            min: 0,
+//            max: 180,
+//            step: 1,
+//            value: 0,
+//            slide: this.handleAngleSliderChange.bind(this)
+//        });
+//
+//        var powerSpinner = $( "#power_value" ).spinner({
+//            min: 0,
+//            max: 100,
+//            step: 1,
+//            value: 50,
+//            spin: this.handlePowerSpinnerChange.bind(this),
+//            change: this.handlePowerSpinnerChange.bind(this)
+//        });
+//
+//        $( "#power_slider" ).slider({
+//            min: 0,
+//            max: 100,
+//            step: 1,
+//            value: 50,
+//            slide: this.handlePowerSliderChange.bind(this)
+//        });
+//
+////        $( "#angle_value" ).spinner("value",0);
+//
+//        $("#fire_button").button().click(function (event) {
+//            console.log("fire");
+//            this.fire();
+////            for (var i = 0; i < 1; i++) {
+////                var p  = this.units[i].fire();
+////                this.projectiles[p.id] = p;
+////            }
+//        }.bind(this));
+        createjs.Ticker.setFPS(60);
+        createjs.Ticker.addEventListener("tick", this.handleTick.bind(this));
+        physSpace.addCollisionHandler(6127, 224, function(a, b) {
+//            console.log('collision');
+            var pid = a.body_a.projectileId;
+            var p = this.projectiles[pid];
+            p.explode();
 
+            this.__ground.explosion(p);
+            this.__ground.draw(this.__worldScreenScale.x,this.__worldScreenScale.y);
+
+        }.bind(this));
+        physSpace.addCollisionHandler(224, 224, function(a, b) {
+//            console.log('collision');
+
+            this.projectiles[a.body_a.projectileId].explode();
+            this.projectiles[a.body_b.projectileId].explode();
+
+//            this.__ground.explosion(p);
+//            this.__ground.draw(this.__worldScreenScale.x,this.__worldScreenScale.y);
+
+        }.bind(this));
+
+        this.lastToFire = 0;
+
+        window.setInterval(function() {
+            this.fire();
+        }.bind(this), 400);
+    },
+
+
+
+    fire: function() {
+        this.lastToFire++;
+        if (this.lastToFire >= this.units.length) {
+            this.lastToFire = 0;
+        }
+
+        var unit = this.units[this.lastToFire];
+        var pos = unit.getPosition();
+//        console.log(pos);
+
+        var angle = null;
+        if (pos[0] > this.__worldDimensions.x/2) {
+            angle = Dirt2d.getRandom(30, 80);
+        } else {
+            angle = Dirt2d.getRandom(100, 150);
+        }
+
+
+        unit.setGunPower(Dirt2d.getRandom(20,50));
+
+
+        unit.setGunAngleDegrees(angle);
+        var p1  = unit.fire();
+        this.projectiles[p1.id] = p1;
+
+//
+//        unit.setGunAngleDegrees(angle + 2);
+//        var p2  = unit.fire();
+//        this.projectiles[p2.id] = p2;
+//
+//        unit.setGunAngleDegrees(angle + 4);
+//        var p3  = unit.fire();
+//        this.projectiles[p3.id] = p3;
+
+
+
+
+    },
+
+    handleTick: function() {
+                     var deadProjectiles = [];
+        var interval = createjs.Ticker.getInterval();
+        physSpace.step(interval);
+//        for (var i = 0; i < this.projectiles.length; i++) {
+        for (var pid in this.projectiles) {
+//            console.log("drawing projectile");
+            var p  = this.projectiles[pid];
+            p.updateScale(this.__worldScreenScale.x,this.__worldScreenScale.y)
+
+            if (!p.drawn) {
+                p.draw();
+            }
+            if (p.exploding === true) {
+                p.stopPhysics();
+            }
+
+            if (p.dead === true) {
+
+                    p.die();
+                    delete this.projectiles[pid];
+
+            } else {
+
+                p.tick();
+            }
+
+
+            if (this.__ground.needsUpdate) {
+                this.__ground.updateGroundPhysics();
+            }
+
+        }
+
+
+//        for (var dpi = 0; dpi < deadProjectiles.length; dpi++) {
+////            var dp = this.projectiles.splice(deadProjectiles[dpi], 1);
+//            var dpid = deadProjectiles[dpi];
+//            var dp = this.projectiles[dpid];
+//
+//            physSpace.removeBody(dp);
+//            delete this.projectiles[dpid];
+//            dp = null;
+//
+//
+//        }
+
+        this.__stage.update();
+
+
+     },
+
+    handleAngleSliderChange: function(event, ui) {
+        $( "#angle_value").spinner("value", ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunAngleDegrees(ui.value);
+        }
+    },
+    handleAngleSpinnerChange: function(event, ui) {
+        $( "#angle_slider" ).slider("value", ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunAngleDegrees(ui.value);
+        }
+    },
+
+
+    handlePowerSliderChange: function(event, ui) {
+        $( "#power_value").spinner("value", ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunPower(ui.value);
+        }
+    },
+    handlePowerSpinnerChange: function(event, ui) {
+        $( "#power_slider" ).slider("value", ui.value);
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].setGunPower(ui.value);
+        }
     },
 
     createTerrain: function() {
-        var segWidthPixels = 1000 / this.__ground.segments.length;
-        var pixelOffset = 1000/2;
-        var pixelOffsetScaler = 1000/this.__groundOffset;
-        console.log("segWidthPixels: %d", segWidthPixels);
+        this.__ground = new Ground(7, this.__worldDimensions, this.__playerCount, this.__stage);
+//        console.dir(this.__ground.segments);
 
-        for (var x = 0; x < this.__ground.segments.length; x++) {
+    },
 
-            var segment = this.__ground.segments[x];
-            var verts = [
-                x*segWidthPixels, 1000*segment[0]/(this.__groundOffset*2),
-                (x+1)*segWidthPixels, 1000*segment[1]/(this.__groundOffset*2),
-                (x+1)*segWidthPixels, 0,
-                x*segWidthPixels, 0
-            ];
+    drawTerrain: function() {
+        this.__ground.draw(this.__worldScreenScale.x, this.__worldScreenScale.y);
 
-            this.__space.addShape(new cp.PolyShape(this.__space.staticBody, verts, cp.v(0,0)));
-        }
-
-//        var singlePieceVerts =
     },
 
     createUnits: function() {
-        var segWidthPixels = 1000 / this.__ground.segments.length;
+        var colors = ["FF0000", "00FF00", "0000FF", "0F0F0F"];
+        for (var i = 0; i < this.__playerCount; i++) {
+            this.__ground.platforms[i]
+            this.units.push(new Unit(this.__ground.platforms[i], this.__stage, this.__worldDimensions, colors[i]));
+        }
+    },
 
-        for (var i = 0; i < this.__unitCount; i++) {
-            var space = this.__space;
-            var width = 4;
-            var height = 4;
-            var mass = width * height * (1/1000);
-            var projectileBody = new cp.Body(mass, cp.momentForBox(mass, width, height));
-//            projectileBody.id = UUIDjs.create().hex;
-            var tank = space.addBody(projectileBody);
-            console.log("position? %d %d", this.__ground.platforms[i][0], this.__ground.platforms[i][1])
-            tank.setPos(cp.v(this.__ground.platforms[i][0]*segWidthPixels, this.__ground.platforms[i][1]*1000/(this.__groundOffset*2)));
-//            rock.setAngle(1);
-//            shape = space.addShape(new cp.RectShape(rock, 4, v(0,0)));
+    drawUnits: function() {
+        for (var i = 0; i < this.units.length; i++) {
+            this.units[i].updateScale(this.__worldScreenScale.x, this.__worldScreenScale.y);
 
-
-            console.log("creating unit %d of %d", i + 1, this.__unitCount);
-//
-//            var unit = new Unit(this.__ground.platforms[i]);
-//
-//            this.__units.push(unit);
-
-//            var verts = unit.getVerts(segWidthPixels, 1000/(this.__groundOffset*2));
-            var shape = new cp.PolyShape(tank, [-8, 16, 8, 16, 8, 0, -8, 0], cp.v(0,0))
-            shape.setFriction(0.3);
-            shape.setElasticity(0.3);
-            shape.setCollisionType(2);
-            this.__space.addShape(shape);
-//            rock.applyImpulse(cp.v(3, 3));
-
-
+            if (!this.units[i].drawn) {
+                this.units[i].draw();
+            }
         }
     },
 
 
-    draw: function() {
-        var ctx = this.__ctx;
-        ctx.strokeStyle = 'black';
-        ctx.clearRect(0, 0, $('#canvas').width(), $('#canvas').height());
-
-        ctx.font = "16px sans-serif";
-        ctx.lineCap = 'round';
-
-        var scale_x = this.__scale_x;
-        var scale_y = this.__scale_y;
-
-        this.__space.eachShape(function(shape) {
-            ctx.fillStyle = shape.style();
-            shape.draw(ctx, scale_x, scale_y, point2canvas);
-        });
-    },
-
     handleWindowResize: function() {
-        var controlsHeight = $('#controls').height();
+        var controlsHeight = $('#controls').outerHeight();
 
-        $('#canvas').attr("height", ($(window).innerHeight() - controlsHeight));
-        $('#canvas').attr("width", ($(window).width()));
+        //use a 16:10 ratio ideally
+        var availableHeight = $(window).innerHeight() - controlsHeight;//-5;
+        var availableWidth =  $(window).width();
+        var newHeight = availableHeight;
+        var newWidth = availableWidth;
+        var availableRatio = availableWidth/availableHeight;
+        if (availableRatio !== ASPECT_RATIO) {
+//            console.log("width too small, make it shorter");
 
-        this.__scale_x = $('#canvas').attr("width")/1000;
-        this.__scale_y = $('#canvas').attr("height")/1000;
+            newHeight = availableWidth/ASPECT_RATIO;
+            newWidth = availableWidth;
+            if (newHeight > availableHeight) {
+                //change width
+                newHeight = availableHeight;
+                newWidth =  availableHeight*ASPECT_RATIO;
+            }
+        }
 
-//        this.draw();
-//        this.drawTerrain();
-        this.draw();
+
+        this.__worldScreenScale.y = newHeight/this.__worldDimensions.y;
+        this.__worldScreenScale.x = newWidth/this.__worldDimensions.x;
+
+//        console.log("availableWidth: %d, availableHeight: %d", availableWidth, availableHeight);
+
+        $('#canvas').attr("height", newHeight);
+        $('#canvas').attr("width", newWidth);
+
+        $('#controls').css("width", newWidth);
+
+        this.drawTerrain();
+        this.drawUnits();
     },
-
     $statics: {
         getRandom: function(low, high) {
             return low + Math.floor(Math.random() * (high - low + 1));
         }
     }
 });
-
-cp.Shape.prototype.style = function() {
-    var body;
-    if (this.sensor) {
-        return "rgba(255,255,255,0)";
-    } else {
-        body = this.body;
-        if (body.isSleeping()) {
-            return "rgb(50,50,50)";
-        } else if (body.nodeIdleTime > this.physSpace.sleepTimeThreshold) {
-            return "rgb(170,170,170)";
-        } else {
-            return styles[this.hashid % styles.length];
-        }
-    }
-};
-
-// **** Draw methods for Shapes
-
-cp.PolyShape.prototype.draw = function(ctx, scale_x, scale_y, point2canvas)
-{
-    ctx.beginPath();
-
-    var verts = this.tVerts;
-    var len = verts.length;
-    var lastPoint = point2canvas(new cp.Vect(verts[len - 2], verts[len - 1]), scale_x, scale_y);
-    ctx.moveTo(lastPoint.x, lastPoint.y);
-
-    for(var i = 0; i < len; i+=2){
-        var p = point2canvas(new cp.Vect(verts[i], verts[i+1]),  scale_x, scale_y);
-        ctx.lineTo(p.x, p.y);
-    }
-    ctx.fill();
-    ctx.stroke();
-};
-
-cp.SegmentShape.prototype.draw = function(ctx, scale, point2canvas) {
-    var oldLineWidth = ctx.lineWidth;
-    ctx.lineWidth = Math.max(1, this.r * scale * 2);
-    drawLine(ctx, point2canvas, this.ta, this.tb);
-    ctx.lineWidth = oldLineWidth;
-};
-
-cp.CircleShape.prototype.draw = function(ctx, scale, point2canvas) {
-    drawCircle(ctx, scale, point2canvas, this.tc, this.r);
-
-    // And draw a little radian so you can see the circle roll.
-    drawLine(ctx, point2canvas, this.tc, cp.v.mult(this.body.rot, this.r).add(this.tc));
-};
-
-
-// Draw methods for constraints
-
-cp.PinJoint.prototype.draw = function(ctx, scale, point2canvas) {
-    var a = this.a.local2World(this.anchr1);
-    var b = this.b.local2World(this.anchr2);
-
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "grey";
-    drawLine(ctx, point2canvas, a, b);
-};
-
-cp.SlideJoint.prototype.draw = function(ctx, scale, point2canvas) {
-    var a = this.a.local2World(this.anchr1);
-    var b = this.b.local2World(this.anchr2);
-    var midpoint = v.add(a, v.clamp(v.sub(b, a), this.min));
-
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "grey";
-    drawLine(ctx, point2canvas, a, b);
-    ctx.strokeStyle = "red";
-    drawLine(ctx, point2canvas, a, midpoint);
-};
-
-cp.PivotJoint.prototype.draw = function(ctx, scale, point2canvas) {
-    var a = this.a.local2World(this.anchr1);
-    var b = this.b.local2World(this.anchr2);
-    ctx.strokeStyle = "grey";
-    ctx.fillStyle = "grey";
-    drawCircle(ctx, scale, point2canvas, a, 2);
-    drawCircle(ctx, scale, point2canvas, b, 2);
-};
-
-cp.GrooveJoint.prototype.draw = function(ctx, scale, point2canvas) {
-    var a = this.a.local2World(this.grv_a);
-    var b = this.a.local2World(this.grv_b);
-    var c = this.b.local2World(this.anchr2);
-
-    ctx.strokeStyle = "grey";
-    drawLine(ctx, point2canvas, a, b);
-    drawCircle(ctx, scale, point2canvas, c, 3);
-};
-
-cp.DampedSpring.prototype.draw = function(ctx, scale, point2canvas) {
-    var a = this.a.local2World(this.anchr1);
-    var b = this.b.local2World(this.anchr2);
-
-    ctx.strokeStyle = "grey";
-    drawSpring(ctx, scale, point2canvas, a, b);
-};
-
-var randColor = function() {
-    return Math.floor(Math.random() * 256);
-};
-
-var styles = [];
-for (var i = 0; i < 100; i++) {
-    styles.push("rgb(" + randColor() + ", " + randColor() + ", " + randColor() + ")");
-}
-var drawCircle = function(ctx, scale, point2canvas, c, radius) {
-    var c = point2canvas(c);
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, scale * radius, 0, 2*Math.PI, false);
-    ctx.fill();
-    ctx.stroke();
-};
-
-var drawLine = function(ctx, point2canvas, a, b) {
-    a = point2canvas(a); b = point2canvas(b);
-
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-};
-
-function point2canvas(point, scale_x, scale_y) {
-//        return v(point.x * self.scale, (480 - point.y) * self.scale);
-    return cp.v(point.x*scale_x, ($('#canvas').height()-point.y*scale_y));
-//        return point;
-};

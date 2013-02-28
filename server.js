@@ -16,4 +16,4 @@ app.use(express.static('public'));
     var port = process.env.PORT || 8081;
     server.listen(port);
 
-    console.log('Your server goes on localhost:' + port);
+    console.log('Server running at: http://localhost:' + port);
